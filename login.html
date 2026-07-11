@@ -16,10 +16,10 @@
 
         <div class="left-side">
             <div class="form-box">
-                <h2>Welcome Back</h2>
-                <p>Log in to your private journal</p>
+                <h2 id="auth-title">Welcome Back</h2>
+                <p id="auth-subtitle">Log in to your private journal</p>
 
-                <form id="login-form">
+                <form id="auth-form">
                     <div class="input-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" required placeholder="Enter your email">
@@ -30,10 +30,17 @@
                         <input type="password" id="password" required placeholder="Enter your password">
                     </div>
 
-                    <button type="submit" class="auth-btn">Log In</button>
+                    <div class="input-group" id="confirm-password-group" style="display: none;">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" placeholder="Confirm your password">
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="auth-btn">Log In</button>
                 </form>
 
-                <p class="toggle-text">Don't have an account? <a href="#" id="go-to-signup">Sign Up</a></p>
+                <p class="toggle-text" id="toggle-container">
+                    Don't have an account? <a href="#" id="switch-auth-mode">Sign Up</a>
+                </p>
             </div>
         </div>
 
@@ -49,6 +56,7 @@
     </div>
 
     <script type="module" src="theme.js"></script>
+    <script type="module" src="auth.js"></script>
 
 </body>
 
