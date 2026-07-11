@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Daybook — click a date to open it</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --leather-1: #8a2e40;
+      --leather-2: #5c1b2a;
+      --leather-3: #3c1019;
+      --gold-1: #e9c876;
+      --gold-2: #a9822f;
+      --paper-1: #faf3e0;
+      --paper-2: #efe3c4;
+      --ink-blue: rgba(64, 96, 158, .32);
+      --ink-red: rgba(178, 68, 68, .55);
+      --ink-pen: #33507a;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      background: #111;
+      font-family: 'Cormorant Garamond', serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 1500px;
+    }
+
+    .book {
+      position: relative;
+      width: 760px;
+      height: 520px;
+      transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .book.open {
+      transform: rotateY(0deg);
+    }
+
+    .book:not(.open) {
+      transform: rotateY(-20deg) rotateX(10deg);
+    }
+
+    .cover-back, .cover-front {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--leather-1), var(--leather-2), var(--leather-3));
+      border-radius: 12px 4px 4px 12px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,0,0,0.5);
+      border: 2px solid var(--gold-2);
+    }
+
+    .cover-front {
+      z-index: 5;
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .book.open .cover-front {
+      transform: rotateY(-180deg);
+    }
+
+    .cover-title {
+      font-family: 'Playfair Display', serif;
+      color: var(--gold-1);
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      margin: 0;
+    }
+
+    .cover-sub {
+      color: var(--gold-2);
+      font-size: 1.1rem;
+      letter-spacing: 6px;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+
+    .spread {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: calc(100% - 20px);
+      height: calc(100% - 20px);
+      background: var(--paper-1);
+      border-radius: 4px;
+      display: flex;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .book.open .spread {
+      opacity: 1;
+      pointer-events: auto;
+      transition-delay: 0.2s;
+    }
+
+    .spread::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.2) 90%, rgba(0,0,0,0));
+      z-index: 10;
+    }
+
+    .spread-page {
+      flex: 1;
+      position: relative;
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .left-page {
+      background: linear-gradient(to right, var(--paper-1) 92%, var(--paper-2));
+      border-radius: 4px 0 0 4px;
+      border-right: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .right-page {
+      background: linear-gradient(to left, var(--paper-1) 92%, var(--paper-2));
+      border-radius: 0 4px 4px 0;
+    }
+
+    .page-number {
+      position: absolute;
+      bottom: 15px;
+      font-size: 0.85rem;
+      color: #888;
+      font-family: sans-serif;
+    }
+
+    .left-page .page-number { left: 20px; }
+    .right-page .page-number { right: 20px; }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 2rem;
+      color: #666;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      z-index: 15;
+    }
+
+    .nav-btn:hover { opacity: 1; }
+    .prev-btn { left: -50px; }
+    .next-btn { right: -50px; }
+
+    .page-heading { margin-bottom: 15px; }
+    .page-heading h2 {
+      font-family: 'Playfair Display', serif;
+      margin: 0;
+      font-size: 1.8rem;
+      color: #222;
+    }
+
+    .page-heading p {
+      margin: 3px 0 0 0;
+      font-size: 0.95rem;
+      color: #666;
+      font-style: italic;
+    }
+
+    .left-body {
+      flex: 1;
+      position: relative;
+      background-image: linear-gradient(var(--ink-blue) 1px, transparent 1px);
+      background-size: 100% 24px;
+      line-height: 24px;
+      font-size: 1.25rem;
+      color: var(--ink-pen);
+      font-family: 'Caveat', cursive;
+      padding-top: 4px;
+      overflow-y: auto;
+    }
+
+    .left-body::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: var(--ink-red);
+      box-shadow: 2px 0 0 var(--ink-red);
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      flex: 1;
+    }
+
+    .calendar-day-header {
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      color: #555;
+      text-transform: uppercase;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .calendar-cell {
+      position: relative;
+      background: rgba(255,255,255,0.4);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      color: #333;
+      transition: background 0.2s;
+    }
+
+    .calendar-cell:not(.empty):hover {
+      background: rgba(255,255,255,0.9);
+    }
+
+    .calendar-cell.active {
+      background: var(--gold-1) !important;
+      font-weight: bold;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    }
+
+    .calendar-cell .dot {
+      position: absolute;
+      bottom: 3px;
+      width: 5px;
+      height: 5px;
+      background: #b24444;
+      border-radius: 50%;
+    }
+
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar-controls button {
+      background: none;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .calendar-controls button:hover {
+      background: #eee;
+    }
+
+    .calendar-controls span {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .add-music-btn {
+      position: absolute;
+      top: 25px;
+      right: 25px;
+      background: none;
+      border: 1px dashed rgba(0,0,0,0.3);
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .add-music-btn:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    .music-list {
+      position: absolute;
+      top: 60px;
+      right: 25px;
+      width: 140px;
+      z-index: 20;
+    }
+
+    .polaroid {
+      background: #fff;
+      padding: 8px 8px 16px 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      transform: rotate(-3deg);
+      border: 1px solid #ddd;
+    }
+
+    .cover-photo {
+      width: 122px;
+      height: 122px;
+      background: #eee;
+      overflow: hidden;
+    }
+
+    .cover-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .polaroid-caption {
+      font-family: 'Caveat', cursive;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 6px;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 { margin-top: 0; }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .modal-actions button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .journal-textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      resize: none;
+      outline: none;
+      line-height: 24px;
+      font-size: 1.5rem;
+      color: var(--ink-pen);
+      font-family: 'Caveat', cursive;
+      padding-left: 15px;
+      box-sizing: border-box;
+    }
+
+    .clear-btn {
+      position: absolute;
+      top: 25px;
+      right: 150px;
+      background: none;
+      border: 1px solid rgba(178,68,68,0.4);
+      color: #b24444;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .clear-btn:hover {
+      background: rgba(178,68,68,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <button class="nav-btn prev-btn" id="prevBtn" type="button">‹</button>
+  <button class="nav-btn next-btn" id="nextBtn" type="button">›</button>
+
+  <div class="book" id="book" role="button" aria-expanded="false" tabindex="0">
+    <div class="cover-front" id="sideCover">
+      <h1 class="cover-title">THE DAYBOOK</h1>
+      <div class="cover-sub">Personal Journal</div>
+    </div>
+    <div class="cover-back"></div>
+
+    <div class="spread">
+      <div class="spread-page left-page">
+        <button class="add-music-btn" type="button" id="addMusicBtn">+ Add music</button>
+        <button class="add-music-btn" type="button" id="aiMusicBtn" style="right: 90px; border-color: rgba(90, 64, 158, 0.5); color: #33507a;">✨ AI Suggest</button>
+        <div class="music-list" id="musicList"></div>
+        <div class="page-heading" id="leftHeading">
+          <h2></h2>
+          <p></p>
+        </div>
+        <div class="left-body" id="leftBody">
+          <textarea class="journal-textarea" id="journalTextarea" placeholder="Write your thoughts here..."></textarea>
+        </div>
+        <div class="page-number" id="leftPageNumber"></div>
+      </div>
+
+      <div class="spread-page right-page">
+        <div class="page-heading">
+          <h2>Calendar</h2>
+          <p>Select a day to view or write</p>
+        </div>
+        <div class="calendar-controls">
+          <button id="calPrevMonth" type="button">◄</button>
+          <span id="calMonthYear"></span>
+          <button id="calNextMonth" type="button">►</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="page-number" id="rightPageNumber"></div>
+        <button class="clear-btn" id="clearAllBtn" type="button" style="position:absolute; bottom:15px; left:40px; right:auto;">Clear All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ---------- load Firebase & Gemini ----------
+    let auth, db, doc, getDoc, setDoc, onAuthStateChanged;
+    let GoogleGenAI;
+
+    try {
+      const fb = await import('./firebase.js');
+      auth = fb.auth;
+      db = fb.db;
+      const firestoreMod = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
+      doc = firestoreMod.doc;
+      getDoc = firestoreMod.getDoc;
+      setDoc = firestoreMod.setDoc;
+      const authMod = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js');
+      onAuthStateChanged = authMod.onAuthStateChanged;
+      GoogleGenAI = await import('https://esm.run/@google/genai');
+    } catch (err) {
+      console.warn("Firebase config missing or local fallback active. Offline mock store will be used instead.", err);
+    }
+
+    // ---------- state & variables ----------
+    let isOpen = false;
+    let currentDate = new Date();
+    let currentDateKey = formatDateKey(currentDate);
+    let calendarDate = new Date();
+    let journalStore = {};
+    let userDocRef = null;
+
+    const book = document.getElementById('book');
+    const spread = document.querySelector('.spread');
+    const leftHeading = document.getElementById('leftHeading');
+    const leftPageNumber = document.getElementById('leftPageNumber');
+    const rightPageNumber = document.getElementById('rightPageNumber');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const calMonthYear = document.getElementById('calMonthYear');
+    const musicList = document.getElementById('musicList');
+    const addMusicBtn = document.getElementById('addMusicBtn');
+    const aiMusicBtn = document.getElementById('aiMusicBtn');
+    const journalTextarea = document.getElementById('journalTextarea');
+    const sideCover = document.getElementById('sideCover');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    // ---------- authorization sync ----------
+    if (onAuthStateChanged && auth) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userDocRef = doc(db, 'journals', user.uid);
+          try {
+            const snap = await getDoc(userDocRef);
+            if (snap.exists()) {
+              journalStore = snap.data();
+            } else {
+              journalStore = {};
+            }
+          } catch (e) {
+            console.error("Error reading Firestore:", e);
+            loadLocalStorageFallback();
+          }
+        } else {
+          userDocRef = null;
+          journalStore = {};
+        }
+        buildCalendar();
+        updatePageContent(currentDateKey);
+      });
+    } else {
+      loadLocalStorageFallback();
+      buildCalendar();
+      updatePageContent(currentDateKey);
+    }
+
+    function loadLocalStorageFallback() {
+      try {
+        const localData = localStorage.getItem('daybook_journal_store');
+        if (localData) journalStore = JSON.parse(localData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function saveEntry(dateKey) {
+      if (userDocRef) {
+        try {
+          await setDoc(userDocRef, journalStore, { merge: true });
+        } catch (e) {
+          console.error("Cloud save failed, writing locally:", e);
+          localStorage.setItem('daybook_journal_store', JSON.stringify(journalStore));
+        }
+      } else {
+        localStorage.setItem('daybook_journal_store', JSON.stringify(journalStore));
+      }
+      buildCalendar();
+    }
+
+    // ---------- entry operations ----------
+    async function getEntry(dateKey) {
+      if (!journalStore[dateKey]) {
+        journalStore[dateKey] = { journal: '', song: null };
+      }
+      return journalStore[dateKey];
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getOrdinalSuffix(day) {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
+      }
+    }
+
+    function getLeftPageNumber(dateKey) {
+      const d = new Date(dateKey + 'T00:00:00');
+      const start = new Date(d.getFullYear(), 0, 1);
+      const diff = d - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      const dayOfYear = Math.floor(diff / oneDay) + 1;
+      return dayOfYear * 2 - 1;
+    }
+
+    // ---------- view logic ----------
+    function setOpen(open) {
+      isOpen = open;
+      if (isOpen) {
+        book.classList.add('open');
+        book.setAttribute('aria-expanded', 'true');
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+        updatePageContent(currentDateKey);
+      } else {
+        book.classList.remove('open');
+        book.setAttribute('aria-expanded', 'false');
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      }
+    }
+
+    async function updatePageContent(dateKey) {
+      currentDateKey = dateKey;
+      const d = new Date(dateKey + 'T00:00:00');
+      const dayNum = d.getDate();
+      const dayWithSuffix = dayNum + getOrdinalSuffix(dayNum);
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+      const monthName = d.toLocaleDateString('en-US', { month: 'long' });
+      const yearNum = d.getFullYear();
+
+      leftHeading.querySelector('h2').textContent = `${dayName}, ${dayWithSuffix}`;
+      leftHeading.querySelector('p').textContent = `${monthName} ${yearNum}`;
+
+      const entry = await getEntry(dateKey);
+      journalTextarea.value = entry.journal || '';
+
+      const lp = getLeftPageNumber(dateKey);
+      leftPageNumber.textContent = lp;
+      rightPageNumber.textContent = lp + 1;
+
+      await renderMusicList(dateKey);
+      highlightActiveCalendarCell(dateKey);
+    }
+
+    async function renderMusicList(dateKey) {
+      musicList.innerHTML = '';
+      const entry = await getEntry(dateKey);
+      if (entry.song && entry.song.title) {
+        const polaroid = document.createElement('div');
+        polaroid.className = 'polaroid';
+        polaroid.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (entry.song.link) window.open(entry.song.link, '_blank');
+        });
+
+        const photo = document.createElement('div');
+        photo.className = 'cover-photo';
+        if (entry.song.cover) {
+          const img = document.createElement('img');
+          img.src = entry.song.cover;
+          img.alt = 'Album Cover';
+          photo.appendChild(img);
+        }
+        polaroid.appendChild(photo);
+
+        const caption = document.createElement('div');
+        caption.className = 'polaroid-caption';
+        caption.textContent = entry.song.title;
+        polaroid.appendChild(caption);
+
+        musicList.appendChild(polaroid);
+        addMusicBtn.style.display = 'none';
+      } else {
+        addMusicBtn.style.display = 'block';
+      }
+    }
+
+    // ---------- calendar generation ----------
+    function buildCalendar() {
+      calendarGrid.innerHTML = '';
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+
+      calMonthYear.textContent = calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      days.forEach(d => {
+        const h = document.createElement('div');
+        h.className = 'calendar-day-header';
+        h.textContent = d;
+        calendarGrid.appendChild(h);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell empty';
+        calendarGrid.appendChild(cell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        cell.textContent = day;
+
+        const loopDate = new Date(year, month, day);
+        const loopKey = formatDateKey(loopDate);
+
+        if (journalStore[loopKey] && (journalStore[loopKey].journal || journalStore[loopKey].song)) {
+          const dot = document.createElement('div');
+          dot.className = 'dot';
+          cell.appendChild(dot);
+        }
+
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updatePageContent(loopKey);
+        });
+
+        calendarGrid.appendChild(cell);
+      }
+      highlightActiveCalendarCell(currentDateKey);
+    }
+
+    function highlightActiveCalendarCell(dateKey) {
+      const cells = calendarGrid.querySelectorAll('.calendar-cell:not(.empty)');
+      const targetDate = new Date(dateKey + 'T00:00:00');
+      if (targetDate.getFullYear() !== calendarDate.getFullYear() || targetDate.getMonth() !== calendarDate.getMonth()) {
+        cells.forEach(c => c.classList.remove('active'));
+        return;
+      }
+      const dayNum = targetDate.getDate();
+      cells.forEach(c => {
+        if (parseInt(c.childNodes[0]?.nodeValue) === dayNum) {
+          c.classList.add('active');
+        } else {
+          c.classList.remove('active');
+        }
+      });
+    }
+
+    function goToMonth(dir) {
+      calendarDate.setMonth(calendarDate.getMonth() + dir);
+      buildCalendar();
+    }
+
+    function prevDay() {
+      const d = new Date(currentDateKey + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      calendarDate = new Date(d);
+      buildCalendar();
+      updatePageContent(formatDateKey(d));
+    }
+
+    function nextDay() {
+      const d = new Date(currentDateKey + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      calendarDate = new Date(d);
+      buildCalendar();
+      updatePageContent(formatDateKey(d));
+    }
+
+    // ---------- interactive music popup ----------
+    function openMusicModal(dateKey) {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.addEventListener('click', () => overlay.remove());
+
+      const content = document.createElement('div');
+      content.className = 'modal-content';
+      content.addEventListener('click', (e) => e.stopPropagation());
+
+      const h3 = document.createElement('h3');
+      h3.textContent = 'Add Track Info';
+      content.appendChild(h3);
+
+      const tInput = document.createElement('input');
+      tInput.placeholder = 'Song Track Title';
+      content.appendChild(tInput);
+
+      const aInput = document.createElement('input');
+      aInput.placeholder = 'Artist Name';
+      content.appendChild(aInput);
+
+      const cInput = document.createElement('input');
+      cInput.placeholder = 'Album Cover Art Image URL';
+      content.appendChild(cInput);
+
+      const lInput = document.createElement('input');
+      lInput.placeholder = 'Spotify Link / Web URL';
+      content.appendChild(lInput);
+
+      const actions = document.createElement('div');
+      actions.className = 'modal-actions';
+
+      const cancel = document.createElement('button');
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', () => overlay.remove());
+      actions.appendChild(cancel);
+
+      const save = document.createElement('button');
+      save.textContent = 'Save Track';
+      save.addEventListener('click', async () => {
+        if (!tInput.value.trim()) return;
+        const entry = await getEntry(dateKey);
+        entry.song = {
+          title: tInput.value.trim(),
+          artist: aInput.value.trim(),
+          cover: cInput.value.trim(),
+          link: lInput.value.trim()
+        };
+        await renderMusicList(dateKey);
+        saveEntry(dateKey);
+        overlay.remove();
+      });
+      actions.appendChild(save);
+
+      content.appendChild(actions);
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+    }
+
+    // ---------- layout events binding ----------
+    book.addEventListener('click', () => { if (!isOpen) setOpen(true); });
+    book.addEventListener('keydown', (e) => {
+      if (document.activeElement !== book) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setOpen(!isOpen);
+      }
+    });
+
+    spread.addEventListener('click', () => setOpen(false));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen && !document.querySelector('.modal-overlay')) setOpen(false);
+    });
+
+    document.getElementById('calPrevMonth').addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToMonth(-1);
+    });
+    document.getElementById('calNextMonth').addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToMonth(1);
+    });
+
+    addMusicBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openMusicModal(currentDateKey);
+    });
+
+    journalTextarea.addEventListener('click', (e) => e.stopPropagation());
+    journalTextarea.addEventListener('input', async () => {
+      if (!currentDateKey) return;
+      const entry = await getEntry(currentDateKey);
+      entry.journal = journalTextarea.value;
+      saveEntry(currentDateKey);
+    });
+
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevDay(); });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextDay(); });
+    sideCover.addEventListener('click', (e) => { if (!isOpen) { e.stopPropagation(); setOpen(true); } });
+
+    clearAllBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm("Are you sure you want to completely erase all data in this journal? This can't be undone.")) {
+        return;
+      }
+      if (userDocRef) {
+        try {
+          await setDoc(userDocRef, {});
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        localStorage.removeItem('daybook_journal_store');
+      }
+      journalStore = {};
+      buildCalendar();
+      updatePageContent(currentDateKey);
+    });
+
+    // Add this near your other event listeners at the bottom of the script
+    aiMusicBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+
+      const text = journalTextarea.value.trim();
+      if (!text) {
+        alert("Write a little bit in your journal first so Gemini can get your vibe!");
+        journalTextarea.focus();
+        return;
+      }
+
+      aiMusicBtn.disabled = true;
+      aiMusicBtn.textContent = 'Thinking...';
+
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const res = await fetch('/api/suggest-song', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ journalText: text })
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch AI recommendation');
+
+        const info = await res.json();
+        const entry = await getEntry(currentDateKey);
+
+        // Save the recommended song directly into the entry
+        entry.song = { title: info.title, artist: info.artist, link: info.link, cover: info.cover };
+
+        await renderMusicList(currentDateKey);
+        saveEntry(currentDateKey);
+      } catch (err) {
+        console.error('AI suggestion failed:', err);
+        alert('Could not generate a song recommendation right now.');
+      } finally {
+        aiMusicBtn.disabled = false;
+        aiMusicBtn.textContent = '✨ AI Suggest';
+      }
+    });
+  </script>
+</body>
+</html>
