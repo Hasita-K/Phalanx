@@ -1,63 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Hippo Journal - Login</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Hippo Journal - Login</title>
+  <style>
+    /* Color variables for Light Mode (Default) */
+    :root {
+      --bg-color: #f4f7f6;
+      --card-bg: white;
+      --text-main: #333;
+      --text-sub: #777;
+      --input-border: #ddd;
+      --right-side-bg: #e3faf4;
+      --book-bg: #2c3e50;
+      --book-spine: #1a252f;
+      --error-color: #d9534f;
+      --leather-grain: rgba(0, 0, 0, 0.08);
+      --leather-sheen: rgba(255, 255, 255, 0.4);
+    }
 
+    /* Color variables for Dark Mode */
+    body.dark-theme {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-main: #f4f7f6;
+      --text-sub: #aaa;
+      --input-border: #444;
+      --right-side-bg: #1a2d29;
+      --book-bg: #34495e;
+      --book-spine: #2c3e50;
+      --error-color: #ff8a80;
+      --leather-grain: rgba(255, 255, 255, 0.06);
+      --leather-sheen: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Reset basic margins */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Theme Button position */
+    .theme-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      cursor: pointer;
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* The split container */
+    .login-container {
+      display: flex;
+      width: 900px;
+      max-width: 94vw;
+      height: 550px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    /* Left side styling */
+    .left-side {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .form-box h2 {
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .form-box p {
+      color: var(--text-sub);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--input-border);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: #4A90E2;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #4A90E2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .auth-btn:hover {
+      background-color: #3d7dcb;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 13px;
+      margin-top: -8px;
+      margin-bottom: 16px;
+      min-height: 16px;
+    }
+
+    .toggle-text {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .toggle-text a {
+      color: #4A90E2;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .toggle-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* Right side styling */
+    .right-side {
+      flex: 1;
+      background-color: var(--right-side-bg);
+      background-image:
+              radial-gradient(140% 100% at 20% 15%, var(--leather-sheen), transparent 55%),
+              repeating-linear-gradient(to bottom, var(--leather-grain) 0 1px, transparent 1px 9px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .journal-graphic {
+      width: 160px;
+      height: 220px;
+      background-color: var(--book-bg);
+      border-radius: 4px 12px 12px 4px;
+      position: relative;
+      box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: floatAndRevolve 4s ease-in-out infinite;
+    }
+
+    .journal-spine {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 14px;
+      height: 100%;
+      background-color: var(--book-spine);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .journal-title {
+      color: #f1c40f;
+      font-weight: bold;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    @keyframes floatAndRevolve {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(3deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    @media (max-width: 720px) {
+      .login-container { flex-direction: column; height: auto; width: 92vw; }
+      .right-side { padding: 30px 0; }
+    }
+  </style>
+</head>
 <body>
 
-    <button id="theme-toggle" class="theme-btn">🌙 Dark Mode</button>
+<button id="theme-toggle" class="theme-btn" type="button">🌙 Dark Mode</button>
 
-    <div class="login-container">
+<div class="login-container">
 
-        <div class="left-side">
-            <div class="form-box">
-                <h2 id="auth-title">Welcome Back</h2>
-                <p id="auth-subtitle">Log in to your private journal</p>
+  <div class="left-side">
+    <div class="form-box">
+      <h2 id="auth-title">Welcome Back</h2>
+      <p id="auth-subtitle">Log in to your private journal</p>
 
-                <form id="auth-form">
-                    <div class="input-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" required placeholder="Enter your email">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" required placeholder="Enter your password">
-                    </div>
-
-                    <div class="input-group" id="confirm-password-group" style="display: none;">
-                        <label for="confirm-password">Confirm Password</label>
-                        <input type="password" id="confirm-password" placeholder="Confirm your password">
-                    </div>
-
-                    <button type="submit" id="submit-btn" class="auth-btn">Log In</button>
-                </form>
-
-                <p class="toggle-text" id="toggle-container">
-                    Don't have an account? <a href="#" id="switch-auth-mode">Sign Up</a>
-                </p>
-            </div>
+      <form id="auth-form" novalidate>
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" required placeholder="Enter your email">
         </div>
 
-        <div class="right-side">
-            <div class="journal-graphic">
-                <div class="journal-spine"></div>
-                <div class="journal-cover">
-                    <span class="journal-title">My Journal</span>
-                </div>
-            </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="Enter your password" minlength="4">
         </div>
 
+        <div class="input-group" id="confirm-password-group" style="display: none;">
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" placeholder="Confirm your password">
+        </div>
+
+        <p class="error-message" id="error-message"></p>
+
+        <button type="submit" id="submit-btn" class="auth-btn">Log In</button>
+      </form>
+
+      <p class="toggle-text" id="toggle-container">
+        Don't have an account? <a href="#" id="switch-auth-mode">Sign Up</a>
+      </p>
     </div>
+  </div>
 
-    <script type="module" src="theme.js"></script>
-    <script type="module" src="auth.js"></script>
+  <div class="right-side">
+    <div class="journal-graphic">
+      <div class="journal-spine"></div>
+      <div class="journal-cover">
+        <span class="journal-title">My Journal</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---------- theme toggle ----------
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    themeToggleBtn.textContent = document.body.classList.contains('dark-theme')
+            ? 'Light Mode'
+            : 'Dark Mode';
+  });
+
+  // ---------- auth (login / sign up) ----------
+  // Change this to point at your real book file / path if it lives elsewhere.
+  const REDIRECT_URL = 'interactive-book.html';
+  const USERS_KEY = 'daybook-users-v1';
+
+  const authForm = document.getElementById('auth-form');
+  const authTitle = document.getElementById('auth-title');
+  const authSubtitle = document.getElementById('auth-subtitle');
+  const submitBtn = document.getElementById('submit-btn');
+  const switchAuthMode = document.getElementById('switch-auth-mode');
+  const toggleContainer = document.getElementById('toggle-container');
+  const confirmGroup = document.getElementById('confirm-password-group');
+  const confirmInput = document.getElementById('confirm-password');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const errorMessage = document.getElementById('error-message');
+
+  let mode = 'login'; // or 'signup'
+
+  function getUsers(){
+    try {
+      return JSON.parse(localStorage.getItem(USERS_KEY)) || {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function saveUsers(users){
+    try {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } catch (err) { /* storage unavailable */ }
+  }
+
+  function showError(msg){
+    errorMessage.textContent = msg;
+  }
+
+  function setMode(next){
+    mode = next;
+    errorMessage.textContent = '';
+    authForm.reset();
+
+    if (mode === 'signup'){
+      authTitle.textContent = 'Create Account';
+      authSubtitle.textContent = 'Start your private journal';
+      submitBtn.textContent = 'Sign Up';
+      confirmGroup.style.display = 'block';
+      confirmInput.setAttribute('required', 'required');
+      toggleContainer.innerHTML = 'Already have an account? <a href="#" id="switch-auth-mode">Log In</a>';
+    } else {
+      authTitle.textContent = 'Welcome Back';
+      authSubtitle.textContent = 'Log in to your private journal';
+      submitBtn.textContent = 'Log In';
+      confirmGroup.style.display = 'none';
+      confirmInput.removeAttribute('required');
+      toggleContainer.innerHTML = "Don't have an account? <a href=\"#\" id=\"switch-auth-mode\">Sign Up</a>";
+    }
+
+    // the link was replaced via innerHTML, so re-attach its listener
+    document.getElementById('switch-auth-mode').addEventListener('click', (e) => {
+      e.preventDefault();
+      setMode(mode === 'login' ? 'signup' : 'login');
+    });
+  }
+
+  switchAuthMode.addEventListener('click', (e) => {
+    e.preventDefault();
+    setMode(mode === 'login' ? 'signup' : 'login');
+  });
+
+  authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showError('');
+
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    if (!email || !password){
+      showError('Please fill in both fields.');
+      return;
+    }
+
+    const users = getUsers();
+
+    if (mode === 'signup'){
+      const confirmPassword = confirmInput.value;
+      if (password.length < 4){
+        showError('Password must be at least 4 characters.');
+        return;
+      }
+      if (password !== confirmPassword){
+        showError('Passwords do not match.');
+        return;
+      }
+      if (users[email]){
+        showError('An account with that email already exists.');
+        return;
+      }
+      users[email] = password;
+      saveUsers(users);
+      window.location.href = REDIRECT_URL;
+    } else {
+      if (!users[email] || users[email] !== password){
+        showError('Incorrect email or password.');
+        return;
+      }
+      window.location.href = REDIRECT_URL;
+    }
+  });
+</script>
 
 </body>
-
 </html>
