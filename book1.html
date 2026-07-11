@@ -552,6 +552,84 @@
   }
   .music-chip:hover{ background:rgba(255,255,255,.7); }
 
+  /* ---------- side cover photo (left of the book) ---------- */
+
+  .page-layout{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:36px;
+  }
+
+  .side-cover{
+    width:148px;
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    opacity:0;
+    transform:translateX(10px) rotate(-4deg);
+    pointer-events:none;
+    transition:opacity .5s ease .25s, transform .5s ease .25s;
+  }
+  .side-cover.visible{
+    opacity:1;
+    transform:translateX(0) rotate(-4deg);
+    pointer-events:auto;
+  }
+  .cover-link{ display:block; text-decoration:none; }
+  .cover-photo{
+    position:relative;
+    width:132px;
+    background:#fff;
+    padding:10px 10px 22px;
+    border-radius:2px;
+    box-shadow:0 16px 28px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+  }
+  .cover-photo::before{
+    content:"";
+    position:absolute;
+    top:-9px; left:50%;
+    width:52px; height:18px;
+    background:rgba(233,200,118,.55);
+    transform:translateX(-50%) rotate(-2deg);
+    box-shadow:0 2px 4px rgba(0,0,0,.25);
+  }
+  .cover-photo img{
+    display:block;
+    width:100%;
+    aspect-ratio:1;
+    object-fit:cover;
+    background:#e6d8ae;
+  }
+  .cover-placeholder{
+    width:132px;
+    aspect-ratio:1;
+    border:1.5px dashed rgba(233,200,118,.4);
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:rgba(233,200,118,.55);
+    font-size:28px;
+  }
+  .cover-caption{
+    margin-top:9px;
+    font-family:'Caveat', cursive;
+    font-size:15px;
+    line-height:1.25;
+    color:#f3e3b8;
+    text-align:center;
+    max-width:100%;
+    overflow-wrap:break-word;
+  }
+  .cover-caption .cover-artist{
+    display:block;
+    font-size:13px;
+    color:#c9b28a;
+    opacity:.85;
+  }
+
   /* ---------- add-music popup ---------- */
 
   .modal-overlay{
@@ -688,6 +766,9 @@
 </head>
 <body>
 
+<div class="page-layout">
+  <div class="side-cover" id="sideCover"></div>
+
 <div class="stage" id="stage">
 
   <div class="book-scene">
@@ -768,6 +849,7 @@
     <button id="nextBtn" class="nav-btn primary" type="button" aria-label="Next day">Next day &rsaquo;</button>
   </div>
 </div>
+</div>
 
 <script type="module">
   const stage = document.getElementById('stage');
@@ -786,6 +868,13 @@
   const musicList = document.getElementById('musicList');
   const addMusicBtn = document.getElementById('addMusicBtn');
   const journalTextarea = document.getElementById('journalTextarea');
+  const sideCover = document.getElementById('sideCover');
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
 
   function showFatalError(message){
     hint.textContent = message;
@@ -830,7 +919,7 @@
   let journalStore = {};
 
   function blankEntry(){
-    return { journal: '', todos: [], music: [] };
+    return { journal: '', todos: [], song: null };
   }
 
   async function getEntry(dateKey){
@@ -860,13 +949,12 @@
     const entry = await getEntry(dateKey);
     musicList.innerHTML = '';
 
-    if (entry.music.length > 0){
+    if (entry.song){
       addMusicBtn.style.display = 'none';
-      const track = entry.music[0];
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'music-chip';
-      chip.textContent = '\u266a ' + track.song + (track.artist ? ' \u2014 ' + track.artist : '');
+      chip.textContent = '\u266a ' + entry.song.title + (entry.song.artist ? ' \u2014 ' + entry.song.artist : '');
       chip.setAttribute('aria-label', 'Change music for this day');
       chip.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -876,11 +964,28 @@
     } else {
       addMusicBtn.style.display = '';
     }
+
+    renderSideCover(entry);
+  }
+
+  // shows the pulled cover art beside the book, like a photo pinned next to the day's page
+  function renderSideCover(entry){
+    if (entry.song){
+      sideCover.innerHTML =
+        `<a class="cover-link" href="${escapeHtml(entry.song.link)}" target="_blank" rel="noopener">` +
+          `<div class="cover-photo"><img src="${escapeHtml(entry.song.cover)}" alt="${escapeHtml(entry.song.title)} cover art"></div>` +
+        `</a>` +
+        `<div class="cover-caption">${escapeHtml(entry.song.title)}<span class="cover-artist">${escapeHtml(entry.song.artist)}</span></div>`;
+    } else {
+      sideCover.innerHTML =
+        `<div class="cover-placeholder">\u266a</div>` +
+        `<div class="cover-caption" style="opacity:.55">no song yet</div>`;
+    }
   }
 
   async function openMusicModal(dateKey){
     const entry = await getEntry(dateKey);
-    const existing = entry.music[0];
+    const existing = entry.song;
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -904,7 +1009,7 @@
     const songInput = box.querySelector('#songInput');
     const artistInput = box.querySelector('#artistInput');
     if (existing){
-      songInput.value = existing.song;
+      songInput.value = existing.title;
       artistInput.value = existing.artist;
     }
     songInput.focus();
@@ -928,10 +1033,35 @@
       const song = songInput.value.trim();
       const artist = artistInput.value.trim();
       if (!song) { songInput.focus(); return; }
-      entry.music = [{ song: song, artist: artist }];
-      closeModal();
-      await renderMusicList(dateKey);
-      saveEntry(dateKey);
+
+      const playBtn = box.querySelector('#musicPlayBtn');
+      playBtn.disabled = true;
+      playBtn.textContent = 'Searching\u2026';
+      songInput.style.borderColor = '';
+
+      try {
+        const params = new URLSearchParams({ song_name: song });
+        if (artist) params.set('artist_name', artist);
+
+        const token = await auth.currentUser.getIdToken();
+        const res = await fetch(`/api/search-song?${params.toString()}`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('Song not found (status ' + res.status + ')');
+        const info = await res.json();
+
+        // replacing entry.song (rather than pushing to a list) is what keeps this to one song per entry
+        entry.song = { title: info.title, artist: info.artist, link: info.link, cover: info.cover };
+
+        closeModal();
+        await renderMusicList(dateKey);
+        saveEntry(dateKey);
+      } catch (err) {
+        console.error('Could not find that song:', err);
+        playBtn.disabled = false;
+        playBtn.textContent = 'Play';
+        songInput.style.borderColor = 'var(--ink-red)';
+      }
     });
   }
 
@@ -998,7 +1128,9 @@
   }
 
   function updateDateKey(){
-    currentDateKey = calYear + '-' + calMonthIndex + '-' + (currentIndex + 1);
+    const month = String(calMonthIndex + 1).padStart(2, '0');
+    const day = String(currentIndex + 1).padStart(2, '0');
+    currentDateKey = `${calYear}-${month}-${day}`;
   }
 
   async function renderSpread(){
@@ -1030,6 +1162,7 @@
 
   function setOpen(next){
     isOpen = next;
+    sideCover.classList.toggle('visible', next);
     clearTimeout(openHideBookTimer);
     clearTimeout(closeHideSpreadTimer);
     clearTimeout(bookFullyHiddenTimer);
