@@ -68,41 +68,26 @@
             transform: scaleX(1);
             filter: blur(2px);
             transition: transform 1s cubic-bezier(.4, 0, .2, 1), opacity 1s ease;
-            will-change: transform;
         }
         
         .stage.is-open .book-shadow {
             transform: scaleX(1.9);
             opacity: .65;
         }
-        
-        .book-scene {
-            position: relative;
-            width: min(640px, 92vw);
-            height: calc(min(330px, 84vw) * 1.56);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
         /* ---------- closed book (cover + calendar) ---------- */
         
         .book {
-            position: absolute;
-            left: 50%;
-            top: 50%;
+            position: relative;
             width: min(330px, 84vw);
             height: calc(min(330px, 84vw) * 1.56);
             transform-style: preserve-3d;
             cursor: pointer;
-            transform: translate(-50%, -50%);
             transition: transform .9s cubic-bezier(.4, 0, .2, 1);
             -webkit-tap-highlight-color: transparent;
-            will-change: transform;
-            z-index: 1;
         }
         
         .book.open {
-            transform: translate(-50%, -50%) translateY(-10px) rotateX(4deg);
+            transform: translateY(-10px) rotateX(4deg);
         }
         
         .book.hidden {
@@ -149,7 +134,6 @@
             transform: rotateY(0deg);
             transition: transform 1.1s cubic-bezier(.3, 1.4, .4, 1);
             z-index: 3;
-            will-change: transform;
         }
         
         .leaf2 {
@@ -175,7 +159,6 @@
             transition: transform 1.3s cubic-bezier(.36, 1.15, .32, 1);
             z-index: 5;
             border-radius: 3px 8px 8px 3px;
-            will-change: transform;
         }
         
         .book.open .cover-front {
@@ -363,7 +346,6 @@
             z-index: 8;
             transition: opacity .45s ease, transform .5s ease;
             filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5));
-            will-change: transform, opacity;
         }
         
         .book.open .clasp {
@@ -411,7 +393,6 @@
             box-shadow: 0 3px 6px rgba(0, 0, 0, .4);
             transform-origin: top center;
             transition: transform .8s ease;
-            will-change: transform;
         }
         
         .book.open .ribbon {
@@ -420,9 +401,6 @@
         /* ---------- open book: flat two-page spread ---------- */
         
         .spread {
-            position: absolute;
-            left: 50%;
-            top: 50%;
             display: flex;
             width: min(640px, 92vw);
             aspect-ratio: 1.55 / 1;
@@ -430,10 +408,8 @@
             transform-origin: 50% 15%;
             opacity: 0;
             pointer-events: none;
-            transform: translate(-50%, -50%) scale(.95) rotateX(6deg);
+            transform: scale(.95) rotateX(6deg);
             transition: opacity .5s ease, transform .5s ease;
-            will-change: transform, opacity;
-            z-index: 2;
         }
         
         .spread.hidden {
@@ -443,7 +419,7 @@
         .spread.open {
             opacity: 1;
             pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1) rotateX(4deg);
+            transform: scale(1) rotateX(4deg);
         }
         
         .spread-page {
@@ -732,13 +708,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
-            border: 1px dashed rgba(51, 80, 122, .4);
-            cursor: pointer;
-            pointer-events: auto;
-        }
-        
-        .music-chip:hover {
-            background: rgba(255, 255, 255, .7);
         }
         /* ---------- add-music popup ---------- */
         
@@ -908,73 +877,71 @@
 
     <div class="stage" id="stage">
 
-        <div class="book-scene">
-            <div class="book" id="book" role="button" tabindex="0" aria-pressed="false" aria-label="Closed leather daybook, press to open">
+        <div class="book" id="book" role="button" tabindex="0" aria-pressed="false" aria-label="Closed leather daybook, press to open">
 
-                <div class="back-cover">
-                    <div class="paper-block"></div>
-                </div>
-
-                <div class="leaf leaf2"></div>
-                <div class="leaf leaf1"></div>
-
-                <div class="ribbon"></div>
-
-                <div class="cover-front">
-                    <div class="cover-face cover-outside">
-                        <div class="title-block">
-                            <div class="title-rule"></div>
-                            <h1>The&nbsp;Daybook</h1>
-                            <div class="byline">a journal, dated</div>
-                        </div>
-                        <div class="calendar-plate">
-                            <div class="cal-header">
-                                <button class="cal-nav" id="calPrevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
-                                <span class="cal-month" id="calMonth">Month Year</span>
-                                <button class="cal-nav" id="calNextMonth" type="button" aria-label="Next month">&rsaquo;</button>
-                            </div>
-                            <div class="cal-weekdays">
-                                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                            </div>
-                            <div class="cal-grid" id="calGrid"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="spine"></div>
-
-                <div class="clasp">
-                    <svg viewBox="0 0 26 44">
-                    <rect x="4" y="0" width="18" height="44" rx="3" fill="#caa14a"/>
-                    <rect x="4" y="0" width="18" height="44" rx="3" fill="url(#g)" opacity="0.6"/>
-                    <circle cx="13" cy="20" r="6" fill="#8a6a25"/>
-                    <circle cx="13" cy="20" r="3" fill="#e9c876"/>
-                    <defs>
-                        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
-                            <stop offset="1" stop-color="#000" stop-opacity=".3"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-                </div>
-
+            <div class="back-cover">
+                <div class="paper-block"></div>
             </div>
 
-            <div class="spread hidden" id="spread" aria-label="Open daybook spread">
-                <div class="spread-page left-page">
-                    <button class="add-music-btn" type="button" id="addMusicBtn">+ Add music</button>
-                    <div class="music-list" id="musicList"></div>
-                    <div class="page-heading" id="leftHeading">
-                        <h2></h2>
-                        <p></p>
+            <div class="leaf leaf2"></div>
+            <div class="leaf leaf1"></div>
+
+            <div class="ribbon"></div>
+
+            <div class="cover-front">
+                <div class="cover-face cover-outside">
+                    <div class="title-block">
+                        <div class="title-rule"></div>
+                        <h1>The&nbsp;Daybook</h1>
+                        <div class="byline">a journal, dated</div>
                     </div>
-                    <div class="left-body" id="leftBody"></div>
-                    <div class="page-number" id="leftPageNumber"></div>
+                    <div class="calendar-plate">
+                        <div class="cal-header">
+                            <button class="cal-nav" id="calPrevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
+                            <span class="cal-month" id="calMonth">Month Year</span>
+                            <button class="cal-nav" id="calNextMonth" type="button" aria-label="Next month">&rsaquo;</button>
+                        </div>
+                        <div class="cal-weekdays">
+                            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                        </div>
+                        <div class="cal-grid" id="calGrid"></div>
+                    </div>
                 </div>
-                <div class="spread-spine"></div>
-                <div class="spread-page right-page">
-                    <textarea class="journal-input" id="journalTextarea" placeholder="Write about your day…"></textarea>
+            </div>
+
+            <div class="spine"></div>
+
+            <div class="clasp">
+                <svg viewBox="0 0 26 44">
+                <rect x="4" y="0" width="18" height="44" rx="3" fill="#caa14a"/>
+                <rect x="4" y="0" width="18" height="44" rx="3" fill="url(#g)" opacity="0.6"/>
+                <circle cx="13" cy="20" r="6" fill="#8a6a25"/>
+                <circle cx="13" cy="20" r="3" fill="#e9c876"/>
+                <defs>
+                    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
+                        <stop offset="1" stop-color="#000" stop-opacity=".3"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            </div>
+
+        </div>
+
+        <div class="spread hidden" id="spread" aria-label="Open daybook spread">
+            <div class="spread-page left-page">
+                <button class="add-music-btn" type="button" id="addMusicBtn">+ Add music</button>
+                <div class="music-list" id="musicList"></div>
+                <div class="page-heading" id="leftHeading">
+                    <h2></h2>
+                    <p></p>
                 </div>
+                <div class="left-body" id="leftBody"></div>
+                <div class="page-number" id="leftPageNumber"></div>
+            </div>
+            <div class="spread-spine"></div>
+            <div class="spread-page right-page">
+                <textarea class="journal-input" id="journalTextarea" placeholder="Write about your day…"></textarea>
             </div>
         </div>
 
@@ -983,70 +950,394 @@
         <div class="hint" id="hint">click a date to open the daybook there — or click the cover</div>
 
         <div class="nav-buttons" id="navButtons">
-            <button id="coverBtn" class="nav-btn" type="button" aria-label="Back to cover">&#10229; Cover</button>
             <button id="prevBtn" class="nav-btn" type="button" aria-label="Previous day">&lsaquo; Prev</button>
             <span id="currentDayLabel" class="current-day-label"></span>
             <button id="nextBtn" class="nav-btn primary" type="button" aria-label="Next day">Next day &rsaquo;</button>
         </div>
     </div>
 
-    <script type="module">
-        import { auth, db } from "./firebase.js"; import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"; import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js"; const stage
-        = document.getElementById('stage'); const book = document.getElementById('book'); const spread = document.getElementById('spread'); const hint = document.getElementById('hint'); const calMonth = document.getElementById('calMonth'); const calGrid
-        = document.getElementById('calGrid'); const prevBtn = document.getElementById('prevBtn'); const nextBtn = document.getElementById('nextBtn'); const coverBtn = document.getElementById('coverBtn'); const currentDayLabel = document.getElementById('currentDayLabel');
-        const leftHeading = document.getElementById('leftHeading'); const leftBody = document.getElementById('leftBody'); const leftPageNumber = document.getElementById('leftPageNumber'); const musicList = document.getElementById('musicList'); const addMusicBtn
-        = document.getElementById('addMusicBtn'); const journalTextarea = document.getElementById('journalTextarea'); let isOpen = false; let currentIndex = 0; let daysInMonthCount = 0; let calYear, calMonthIndex; let currentDateKey = null; const realToday
-        = new Date(); let displayYear = realToday.getFullYear(); let displayMonthIndex = realToday.getMonth(); let openHideBookTimer = null; let closeHideSpreadTimer = null; let bookFullyHiddenTimer = null; let journalStore = {}; async function getEntry(dateKey)
-        { if (journalStore[dateKey]) { return journalStore[dateKey]; } const ref = doc( db, "users", auth.currentUser.uid, "journal", dateKey ); const snap = await getDoc(ref); if (snap.exists()) { journalStore[dateKey] = snap.data(); } else { journalStore[dateKey]
-        = { journal: "", todos: [], music: [] }; } return journalStore[dateKey]; } async function renderMusicList(dateKey) { const entry = await getEntry(dateKey); musicList.innerHTML = ''; if (entry.music.length > 0) { addMusicBtn.style.display = 'none';
-        const track = entry.music[0]; const chip = document.createElement('button'); chip.type = 'button'; chip.className = 'music-chip'; chip.textContent = '\u266a ' + track.song + (track.artist ? ' \u2014 ' + track.artist : ''); chip.setAttribute('aria-label',
-        'Change music for this day'); chip.addEventListener('click', (e) => { e.stopPropagation(); openMusicModal(dateKey); }); musicList.appendChild(chip); } else { addMusicBtn.style.display = ''; } } async function saveStore() { if (!currentDateKey)
-        return; await setDoc( doc( db, "users", auth.currentUser.uid, "journal", currentDateKey ), journalStore[currentDateKey] ); } function openMusicModal(dateKey) { const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-        const entry = getEntry(dateKey); const existing = entry.music[0]; const box = document.createElement('div'); box.className = 'modal-box'; box.innerHTML = '
-        <h3>Add music</h3>' + '
-        <div class="modal-row">' + '
-            <input id="songInput" type="text" placeholder="Song name" />' + '
-            <input id="artistInput" type="text" placeholder="Artist name" />' + '
-        </div>' + '
-        <div class="modal-actions">' + '
-            <button type="button" class="modal-btn" id="musicCancelBtn">Cancel</button>' + '
-            <button type="button" class="modal-btn primary" id="musicPlayBtn">Play</button>' + '
-        </div>'; overlay.appendChild(box); document.body.appendChild(overlay); const songInput = box.querySelector('#songInput'); const artistInput = box.querySelector('#artistInput'); if (existing) { songInput.value = existing.song; artistInput.value
-        = existing.artist; } songInput.focus(); function closeModal() { document.removeEventListener('keydown', onKeydown); overlay.remove(); } function onKeydown(e) { if (e.key === 'Escape') { e.stopPropagation(); closeModal(); } } document.addEventListener('keydown',
-        onKeydown); overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); }); box.addEventListener('click', (e) => e.stopPropagation()); box.querySelector('#musicCancelBtn').addEventListener('click', closeModal); box.querySelector('#musicPlayBtn').addEventListener('click',
-        () => { const song = songInput.value.trim(); const artist = artistInput.value.trim(); if (!song) { songInput.focus(); return; } entry.music = [{ song: song, artist: artist }]; saveStore(); renderMusicList(dateKey); closeModal(); fetch('/api/music',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: dateKey, song: song, artist: artist }) }).catch((err) => { console.error('Could not reach the server:', err); }); }); } async function renderLeftBody(dateKey)
-        { leftBody.innerHTML = ''; const entry = await getEntry(dateKey); if (entry.todos.length > 0) { const todoList = document.createElement('div'); todoList.className = 'todo-list'; entry.todos.forEach((todo, idx) => { const row = document.createElement('div');
-        row.className = 'todo-row' + (todo.done ? ' done' : ''); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = todo.done; cb.addEventListener('click', (e) => e.stopPropagation()); cb.addEventListener('change', () => {
-        todo.done = cb.checked; row.classList.toggle('done', cb.checked); saveStore(); }); const txt = document.createElement('input'); txt.type = 'text'; txt.className = 'todo-text'; txt.placeholder = 'To-do…'; txt.value = todo.text; txt.addEventListener('click',
-        (e) => e.stopPropagation()); txt.addEventListener('input', () => { todo.text = txt.value; saveStore(); }); const del = document.createElement('button'); del.type = 'button'; del.className = 'todo-del'; del.textContent = '\u00d7'; del.setAttribute('aria-label',
-        'Remove to-do'); del.addEventListener('click', (e) => { e.stopPropagation(); entry.todos.splice(idx, 1); saveStore(); renderLeftBody(dateKey); }); row.append(cb, txt, del); todoList.appendChild(row); }); leftBody.appendChild(todoList); } const
-        addTodoBtn = document.createElement('button'); addTodoBtn.type = 'button'; addTodoBtn.className = 'add-todo-btn'; addTodoBtn.textContent = '+ add to-do'; addTodoBtn.addEventListener('click', (e) => { e.stopPropagation(); entry.todos.push({ text:
-        '', done: false }); saveStore(); renderLeftBody(dateKey); const rows = leftBody.querySelectorAll('.todo-text'); if (rows.length) rows[rows.length - 1].focus(); }); leftBody.appendChild(addTodoBtn); } function updateDateKey() { currentDateKey =
-        calYear + '-' + calMonthIndex + '-' + (currentIndex + 1); } async function renderSpread() { updateDateKey(); const shownDate = new Date(calYear, calMonthIndex, currentIndex + 1); leftHeading.querySelector('h2').textContent = shownDate.toLocaleDateString('default',
-        { weekday: 'long' }); leftHeading.querySelector('p').textContent = shownDate.toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' }); leftPageNumber.textContent = String(currentIndex + 1); renderLeftBody(currentDateKey);
-        renderMusicList(currentDateKey); journalTextarea.value = getEntry(currentDateKey).journal; const dayEls = [...calGrid.children].filter(c => !c.classList.contains('empty')); dayEls.forEach(el => el.classList.remove('selected')); if (dayEls[currentIndex])
-        dayEls[currentIndex].classList.add('selected'); currentDayLabel.textContent = shownDate.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' }); prevBtn.disabled = currentIndex
-        <=0 ; nextBtn.disabled=c urrentIndex>= daysInMonthCount - 1; } function setOpen(next) { isOpen = next; clearTimeout(openHideBookTimer); clearTimeout(closeHideSpreadTimer); clearTimeout(bookFullyHiddenTimer); if (next) { book.classList.remove('hidden'); book.classList.add('open');
-            stage.classList.add('is-open'); openHideBookTimer = setTimeout(() => { spread.classList.remove('hidden'); requestAnimationFrame(() => { requestAnimationFrame(() => { spread.classList.add('open'); }); }); bookFullyHiddenTimer = setTimeout(()
-            => { book.classList.add('hidden'); }, 520); }, 850); } else { spread.classList.remove('open'); book.classList.remove('hidden'); requestAnimationFrame(() => { requestAnimationFrame(() => { book.classList.remove('open'); }); }); closeHideSpreadTimer
-            = setTimeout(() => { spread.classList.add('hidden'); }, 500); stage.classList.remove('is-open'); } book.setAttribute('aria-pressed', String(isOpen)); book.setAttribute('aria-label', isOpen ? 'Open daybook' : 'Closed leather daybook, press
-            to open'); hint.textContent = isOpen ? 'click a blank part of the page to close it' : 'click a date to open the daybook there — or click the cover'; } function jumpToDay(index) { currentIndex = index; if (!isOpen) setOpen(true); renderSpread();
-            } function nextDay() { if (currentIndex
-            < daysInMonthCount - 1) { currentIndex++; renderSpread(); } } function prevDay() { if (currentIndex> 0) { currentIndex--; renderSpread(); } } function buildCalendar() { calYear = displayYear; calMonthIndex = displayMonthIndex; daysInMonthCount = new Date(calYear, calMonthIndex + 1, 0).getDate(); const firstWeekday = new Date(calYear, calMonthIndex,
-                1).getDay(); const isCurrentRealMonth = calYear === realToday.getFullYear() && calMonthIndex === realToday.getMonth(); calMonth.textContent = new Date(calYear, calMonthIndex, 1).toLocaleDateString('default', { month: 'long', year: 'numeric'
-                }); calGrid.innerHTML = ''; for (let i = 0; i
-                < firstWeekday; i++) { const empty=d ocument.createElement( 'div'); empty.className='cal-day empty' ; calGrid.appendChild(empty); } for (let d=1 ; d <=d aysInMonthCount; d++) { const btn=d
-                    ocument.createElement( 'button'); btn.type='button' ; btn.className='cal-day' ; btn.textContent=d ; if (isCurrentRealMonth && d===r ealToday.getDate()) btn.classList.add( 'today'); btn.setAttribute( 'aria-label', 'Open ' + calMonth.textContent
-                    + ' ' + d); btn.addEventListener( 'click', (e)=> { e.stopPropagation(); jumpToDay(d - 1); }); calGrid.appendChild(btn); } const weekRows = Math.ceil((firstWeekday + daysInMonthCount) / 7); calGrid.style.gridTemplateRows = 'repeat(' + weekRows + ', 1fr)'; currentIndex = isCurrentRealMonth
-                    ? realToday.getDate() - 1 : 0; renderSpread(); } function goToMonth(delta) { displayMonthIndex += delta; if (displayMonthIndex
-                    < 0) { displayMonthIndex=1 1; displayYear--; } if (displayMonthIndex> 11) { displayMonthIndex = 0; displayYear++; } buildCalendar(); } book.addEventListener('click', () => setOpen(!isOpen)); book.addEventListener('keydown', (e) => { if (e.target !== book) return; if (e.key === 'Enter' || e.key === '
-                        ') { e.preventDefault(); setOpen(!isOpen); } }); spread.addEventListener('click', () => setOpen(false)); document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen && !document.querySelector('.modal-overlay'))
-                        setOpen(false); }); document.getElementById('calPrevMonth').addEventListener('click', (e) => { e.stopPropagation(); goToMonth(-1); }); document.getElementById('calNextMonth').addEventListener('click', (e) => { e.stopPropagation();
-                        goToMonth(1); }); addMusicBtn.addEventListener('click', (e) => { e.stopPropagation(); openMusicModal(currentDateKey); }); journalTextarea.addEventListener('click', (e) => e.stopPropagation()); journalTextarea.addEventListener('input',
-                        () => { if (!currentDateKey) return; const entry = getEntry(dateKey); entry.journal = journalTextarea.value; saveStore(); }); prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevDay(); }); nextBtn.addEventListener('click',
-                        (e) => { e.stopPropagation(); nextDay(); }); coverBtn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(false); }); onAuthStateChanged(auth, (user) => { if (!user) { window.location.href = "login.html"; return; }
-                        buildCalendar(); });
+    <script>
+        const stage = document.getElementById('stage');
+        const book = document.getElementById('book');
+        const spread = document.getElementById('spread');
+        const hint = document.getElementById('hint');
+        const calMonth = document.getElementById('calMonth');
+        const calGrid = document.getElementById('calGrid');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentDayLabel = document.getElementById('currentDayLabel');
+        const leftHeading = document.getElementById('leftHeading');
+        const leftBody = document.getElementById('leftBody');
+        const leftPageNumber = document.getElementById('leftPageNumber');
+        const musicList = document.getElementById('musicList');
+        const addMusicBtn = document.getElementById('addMusicBtn');
+        const journalTextarea = document.getElementById('journalTextarea');
+
+        let isOpen = false;
+        let currentIndex = 0;
+        let daysInMonthCount = 0;
+        let calYear, calMonthIndex;
+        let currentDateKey = null;
+        const realToday = new Date();
+        let displayYear = realToday.getFullYear();
+        let displayMonthIndex = realToday.getMonth();
+        let openHideBookTimer = null;
+        let closeHideSpreadTimer = null;
+
+        const STORAGE_KEY = 'daybook-entries-v1';
+        let journalStore = {};
+        try {
+            journalStore = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        } catch (err) {
+            journalStore = {};
+        }
+
+        function saveStore() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(journalStore));
+            } catch (err) { /* storage unavailable, entries stay in-memory only */ }
+        }
+
+        function getEntry(dateKey) {
+            if (!journalStore[dateKey]) journalStore[dateKey] = {
+                journal: '',
+                todos: [],
+                music: []
+            };
+            if (!journalStore[dateKey].music) journalStore[dateKey].music = [];
+            return journalStore[dateKey];
+        }
+
+        function renderMusicList(dateKey) {
+            const entry = getEntry(dateKey);
+            musicList.innerHTML = '';
+            entry.music.forEach((track) => {
+                const chip = document.createElement('div');
+                chip.className = 'music-chip';
+                chip.textContent = '\u266a ' + track.song + (track.artist ? ' \u2014 ' + track.artist : '');
+                musicList.appendChild(chip);
+            });
+        }
+
+        function openMusicModal(dateKey) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+
+            const box = document.createElement('div');
+            box.className = 'modal-box';
+            box.innerHTML =
+                '<h3>Add music</h3>' +
+                '<div class="modal-row">' +
+                '<input id="songInput" type="text" placeholder="Song name" />' +
+                '<input id="artistInput" type="text" placeholder="Artist name" />' +
+                '</div>' +
+                '<div class="modal-actions">' +
+                '<button type="button" class="modal-btn" id="musicCancelBtn">Cancel</button>' +
+                '<button type="button" class="modal-btn primary" id="musicSaveBtn">Save</button>' +
+                '</div>';
+
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            const songInput = box.querySelector('#songInput');
+            const artistInput = box.querySelector('#artistInput');
+            songInput.focus();
+
+            function closeModal() {
+                document.removeEventListener('keydown', onKeydown);
+                overlay.remove();
+            }
+
+            function onKeydown(e) {
+                if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    closeModal();
+                }
+            }
+            document.addEventListener('keydown', onKeydown);
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal();
+            });
+            box.addEventListener('click', (e) => e.stopPropagation());
+
+            box.querySelector('#musicCancelBtn').addEventListener('click', closeModal);
+            box.querySelector('#musicSaveBtn').addEventListener('click', () => {
+                const song = songInput.value.trim();
+                const artist = artistInput.value.trim();
+                if (!song) {
+                    songInput.focus();
+                    return;
+                }
+                const entry = getEntry(dateKey);
+                entry.music.push({
+                    song: song,
+                    artist: artist
+                });
+                saveStore();
+                renderMusicList(dateKey);
+                closeModal();
+            });
+        }
+
+        function renderLeftBody(dateKey) {
+            leftBody.innerHTML = '';
+            const entry = getEntry(dateKey);
+
+            if (entry.todos.length > 0) {
+                const todoList = document.createElement('div');
+                todoList.className = 'todo-list';
+                entry.todos.forEach((todo, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'todo-row' + (todo.done ? ' done' : '');
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = todo.done;
+                    cb.addEventListener('click', (e) => e.stopPropagation());
+                    cb.addEventListener('change', () => {
+                        todo.done = cb.checked;
+                        row.classList.toggle('done', cb.checked);
+                        saveStore();
+                    });
+
+                    const txt = document.createElement('input');
+                    txt.type = 'text';
+                    txt.className = 'todo-text';
+                    txt.placeholder = 'To-do…';
+                    txt.value = todo.text;
+                    txt.addEventListener('click', (e) => e.stopPropagation());
+                    txt.addEventListener('input', () => {
+                        todo.text = txt.value;
+                        saveStore();
+                    });
+
+                    const del = document.createElement('button');
+                    del.type = 'button';
+                    del.className = 'todo-del';
+                    del.textContent = '\u00d7';
+                    del.setAttribute('aria-label', 'Remove to-do');
+                    del.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        entry.todos.splice(idx, 1);
+                        saveStore();
+                        renderLeftBody(dateKey);
+                    });
+
+                    row.append(cb, txt, del);
+                    todoList.appendChild(row);
+                });
+                leftBody.appendChild(todoList);
+            }
+
+            const addTodoBtn = document.createElement('button');
+            addTodoBtn.type = 'button';
+            addTodoBtn.className = 'add-todo-btn';
+            addTodoBtn.textContent = '+ add to-do';
+            addTodoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                entry.todos.push({
+                    text: '',
+                    done: false
+                });
+                saveStore();
+                renderLeftBody(dateKey);
+                const rows = leftBody.querySelectorAll('.todo-text');
+                if (rows.length) rows[rows.length - 1].focus();
+            });
+            leftBody.appendChild(addTodoBtn);
+        }
+
+        function updateDateKey() {
+            currentDateKey = calYear + '-' + calMonthIndex + '-' + (currentIndex + 1);
+        }
+
+        function renderSpread() {
+            updateDateKey();
+            const shownDate = new Date(calYear, calMonthIndex, currentIndex + 1);
+
+            leftHeading.querySelector('h2').textContent = shownDate.toLocaleDateString('default', {
+                weekday: 'long'
+            });
+            leftHeading.querySelector('p').textContent = shownDate.toLocaleDateString('default', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            leftPageNumber.textContent = String(currentIndex + 1);
+
+            renderLeftBody(currentDateKey);
+            renderMusicList(currentDateKey);
+            journalTextarea.value = getEntry(currentDateKey).journal;
+
+            const dayEls = [...calGrid.children].filter(c => !c.classList.contains('empty'));
+            dayEls.forEach(el => el.classList.remove('selected'));
+            if (dayEls[currentIndex]) dayEls[currentIndex].classList.add('selected');
+
+            currentDayLabel.textContent = shownDate.toLocaleDateString('default', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= daysInMonthCount - 1;
+        }
+
+        function setOpen(next) {
+            isOpen = next;
+            clearTimeout(openHideBookTimer);
+            clearTimeout(closeHideSpreadTimer);
+
+            if (next) {
+                book.classList.remove('hidden');
+                book.classList.add('open');
+                stage.classList.add('is-open');
+                openHideBookTimer = setTimeout(() => {
+                    book.classList.add('hidden');
+                    spread.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            spread.classList.add('open');
+                        });
+                    });
+                }, 1300);
+            } else {
+                spread.classList.remove('open');
+                closeHideSpreadTimer = setTimeout(() => {
+                    spread.classList.add('hidden');
+                }, 550);
+                book.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        book.classList.remove('open');
+                    });
+                });
+                stage.classList.remove('is-open');
+            }
+
+            book.setAttribute('aria-pressed', String(isOpen));
+            book.setAttribute('aria-label', isOpen ? 'Open daybook' : 'Closed leather daybook, press to open');
+            hint.textContent = isOpen ? 'click a blank part of the page to close it' : 'click a date to open the daybook there — or click the cover';
+        }
+
+        function jumpToDay(index) {
+            currentIndex = index;
+            if (!isOpen) setOpen(true);
+            renderSpread();
+        }
+
+        function nextDay() {
+            if (currentIndex < daysInMonthCount - 1) {
+                currentIndex++;
+                renderSpread();
+            }
+        }
+
+        function prevDay() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderSpread();
+            }
+        }
+
+        function buildCalendar() {
+            calYear = displayYear;
+            calMonthIndex = displayMonthIndex;
+            daysInMonthCount = new Date(calYear, calMonthIndex + 1, 0).getDate();
+            const firstWeekday = new Date(calYear, calMonthIndex, 1).getDay();
+            const isCurrentRealMonth = calYear === realToday.getFullYear() && calMonthIndex === realToday.getMonth();
+
+            calMonth.textContent = new Date(calYear, calMonthIndex, 1).toLocaleDateString('default', {
+                month: 'long',
+                year: 'numeric'
+            });
+
+            calGrid.innerHTML = '';
+            for (let i = 0; i < firstWeekday; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'cal-day empty';
+                calGrid.appendChild(empty);
+            }
+            for (let d = 1; d <= daysInMonthCount; d++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cal-day';
+                btn.textContent = d;
+                if (isCurrentRealMonth && d === realToday.getDate()) btn.classList.add('today');
+                btn.setAttribute('aria-label', 'Open ' + calMonth.textContent + ' ' + d);
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    jumpToDay(d - 1);
+                });
+                calGrid.appendChild(btn);
+            }
+            const weekRows = Math.ceil((firstWeekday + daysInMonthCount) / 7);
+            calGrid.style.gridTemplateRows = 'repeat(' + weekRows + ', 1fr)';
+
+            currentIndex = isCurrentRealMonth ? realToday.getDate() - 1 : 0;
+            renderSpread();
+        }
+
+        function goToMonth(delta) {
+            displayMonthIndex += delta;
+            if (displayMonthIndex < 0) {
+                displayMonthIndex = 11;
+                displayYear--;
+            }
+            if (displayMonthIndex > 11) {
+                displayMonthIndex = 0;
+                displayYear++;
+            }
+            buildCalendar();
+        }
+
+        book.addEventListener('click', () => setOpen(!isOpen));
+        book.addEventListener('keydown', (e) => {
+            if (e.target !== book) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setOpen(!isOpen);
+            }
+        });
+
+        spread.addEventListener('click', () => setOpen(false));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isOpen && !document.querySelector('.modal-overlay')) setOpen(false);
+        });
+
+        document.getElementById('calPrevMonth').addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToMonth(-1);
+        });
+        document.getElementById('calNextMonth').addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToMonth(1);
+        });
+
+        addMusicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMusicModal(currentDateKey);
+        });
+
+        journalTextarea.addEventListener('click', (e) => e.stopPropagation());
+        journalTextarea.addEventListener('input', () => {
+            if (!currentDateKey) return;
+            const entry = getEntry(currentDateKey);
+            entry.journal = journalTextarea.value;
+            saveStore();
+        });
+
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            prevDay();
+        });
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nextDay();
+        });
+
+        buildCalendar();
     </script>
 
 </body>
