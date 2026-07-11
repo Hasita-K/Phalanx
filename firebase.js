@@ -1,19 +1,16 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // 1. Add this import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: "your-app-id.firebaseapp.com",
-    projectId: "your-app-id",
-    storageBucket: "your-app-id.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id"
+    apiKey: "PASTE_YOUR_REAL_API_KEY_HERE",
+    authDomain: "PASTE_YOUR_REAL_PROJECT.firebaseapp.com",
+    projectId: "PASTE_YOUR_REAL_PROJECT_ID",
+    storageBucket: "PASTE_YOUR_REAL_PROJECT.appspot.com",
+    messagingSenderId: "PASTE_YOUR_REAL_SENDER_ID",
+    appId: "PASTE_YOUR_REAL_APP_ID"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Export your services so you can use them in other files
 export const auth = getAuth(app);
-export const db = getFirestore(app); // 2. Add this line to initialize the database
+export const db = getFirestore(app);

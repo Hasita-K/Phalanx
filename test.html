@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login Error</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="left-side">
+            <div class="form-box">
+                <h2>Hmm, that didn't work</h2>
+                <div id="error-display" style="color:#e74c3c;font-size:13px;margin-bottom:15px;font-weight:bold;background:#fdf2f2;padding:10px;border-radius:6px;"></div>
+                <a href="index.html" class="auth-btn" style="display:block;text-align:center;text-decoration:none;">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const msg = sessionStorage.getItem("authError") || "Something went wrong.";
+        document.getElementById("error-display").textContent = msg;
+        sessionStorage.removeItem("authError");
+    </script>
+</body>
+
+</html>

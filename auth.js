@@ -1,6 +1,8 @@
 import { auth, db } from "./firebase.js";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+// ...rest of your file stays identical...
 
 // DOM Elements
 const authForm = document.getElementById("auth-form");
@@ -13,8 +15,10 @@ const toggleContainer = document.getElementById("toggle-container");
 
 let isSignUpMode = false;
 
-// Function to update the interface layout dynamically
+// 1. Switch the form layout between Login / Sign Up
 function renderAuthForm() {
+    clearError();
+
     if (isSignUpMode) {
         authTitle.textContent = "Create Account";
         authSubtitle.textContent = "Start your digital journal journey today";
@@ -31,62 +35,107 @@ function renderAuthForm() {
         toggleContainer.innerHTML = 'Don\'t have an account? <a href="#" id="switch-auth-mode">Sign Up</a>';
     }
 
-    // Re-bind the click event listener safely to the new link element in the DOM
+    // Rebind since innerHTML resets the element
     document.getElementById("switch-auth-mode").addEventListener("click", handleModeToggle);
 }
 
-// Click handler function for switching modes
 function handleModeToggle(e) {
     e.preventDefault();
     isSignUpMode = !isSignUpMode;
     renderAuthForm();
 }
 
-// Initial binding of the toggle action when the page loads
 document.getElementById("switch-auth-mode").addEventListener("click", handleModeToggle);
 
-// Handle Form Submission (Firebase Communications)
+// 2. Inline error banner (shown above the form, no page rebuild needed)
+function showError(message) {
+    let errorBox = document.getElementById("auth-error");
+    if (!errorBox) {
+        errorBox = document.createElement("div");
+        errorBox.id = "auth-error";
+        errorBox.style.cssText =
+            "color:#e74c3c;font-size:13px;margin-bottom:15px;font-weight:bold;background:#fdf2f2;padding:10px;border-radius:6px;";
+        authForm.parentNode.insertBefore(errorBox, authForm);
+    }
+    errorBox.textContent = message;
+}
+
+function clearError() {
+    const errorBox = document.getElementById("auth-error");
+    if (errorBox) errorBox.remove();
+}
+
+// 3. Handle Authentication Submissions
 authForm.addEventListener("submit", async(e) => {
     e.preventDefault();
+    clearError();
 
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    console.log("Form submitting... Mode is SignUp:", isSignUpMode); // Debug log to developer console
-
     if (isSignUpMode) {
+        // SIGN UP
         const confirmPassword = confirmPasswordInput.value;
         if (password !== confirmPassword) {
-            alert("Passwords do not match!");
+            showError("⚠️ Passwords do not match!");
             return;
         }
 
         try {
-            // 1. Authenticate & create the user profile
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            console.log("User authentication created:", user.uid);
 
-            // 2. Direct database document record creation
             await setDoc(doc(db, "users", user.uid), {
                 email: user.email,
                 createdAt: new Date().toISOString()
             });
 
-            alert("Account created successfully! Database entry saved.");
+            window.location.href = "book.html";
+        } catch (error) {
+            console.error("Sign up failed:", error);
 
-        } catch (error) {
-            console.error(error);
-            alert("Sign Up Error: " + error.message);
+            if (error.code === "auth/email-already-in-use") {
+                showError("An account with this email already exists. Please log in instead.");
+                isSignUpMode = false;
+                renderAuthForm();
+            } else if (error.code === "auth/weak-password") {
+                showError("Password should be at least 6 characters.");
+            } else if (error.code === "auth/invalid-email") {
+                showError("Please enter a valid email address.");
+            } else {
+                sessionStorage.setItem("authError", "We couldn't create your account. Please try again.");
+                window.location.href = "test.html";
+            }
         }
+
     } else {
-        // Handle Login Mode action
+        // LOG IN
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            alert("Logged in successfully! Welcome " + userCredential.user.email);
+            await signInWithEmailAndPassword(auth, email, password);
+            window.location.href = "book.html";
         } catch (error) {
-            console.error(error);
-            alert("Login Error: " + error.message);
+            console.error("Login failed:", error);
+
+            if (
+                error.code === "auth/invalid-credential" ||
+                error.code === "auth/user-not-found" ||
+                error.code === "auth/wrong-password"
+            ) {
+                // Modern Firebase can't tell us which of these it is (by design),
+                // so we give one safe message and an obvious way to sign up.
+                sessionStorage.setItem(
+                    "authError",
+                    "Incorrect email or password. New here? Use the Sign Up link below."
+                );
+            } else if (error.code === "auth/invalid-email") {
+                sessionStorage.setItem("authError", "Please enter a valid email address.");
+            } else if (error.code === "auth/too-many-requests") {
+                sessionStorage.setItem("authError", "Too many attempts. Please wait a bit and try again.");
+            } else {
+                sessionStorage.setItem("authError", "Login failed. Please try again.");
+            }
+
+            window.location.href = "test.html";
         }
     }
 });
