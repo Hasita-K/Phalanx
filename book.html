@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Daybook — click a date to open it</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --leather-1:#8a2e40;
+            --leather-2:#5c1b2a;
+            --leather-3:#3c1019;
+            --gold-1:#e9c876;
+            --gold-2:#a9822f;
+            --paper-1:#faf3e0;
+            --paper-2:#efe3c4;
+            --ink-blue:rgba(64,96,158,.32);
+            --ink-red:rgba(178,68,68,.55);
+            --ink-pen:#33507a;
+        }
+
+        *{box-sizing:border-box;}
+        html,body{height:100%;margin:0;}
+
+        body{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:radial-gradient(ellipse at 50% 20%, #3a2417 0%, #241408 55%, #170c05 100%);
+            overflow:hidden;
+            font-family:'Cormorant Garamond', serif;
+            position:relative;
+        }
+        body::before{
+            content:"";
+            position:absolute; inset:0;
+            background-image:
+                    repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px),
+                    repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 1px, transparent 1px 90px);
+            pointer-events:none;
+        }
+
+        .stage{
+            perspective:2400px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:20px;
+            padding:40px 20px;
+        }
+
+        .book-shadow{
+            width:min(300px, 78vw);
+            height:34px;
+            margin-top:-6px;
+            border-radius:50%;
+            background:radial-gradient(ellipse at center, rgba(0,0,0,.55), rgba(0,0,0,0) 72%);
+            transform:scaleX(1);
+            filter:blur(2px);
+            transition:transform 1s cubic-bezier(.4,0,.2,1), opacity 1s ease;
+        }
+        .stage.is-open .book-shadow{ transform:scaleX(1.55); opacity:.7; }
+
+        .book{
+            position:relative;
+            width:min(330px, 84vw);
+            height:calc(min(330px, 84vw) * 1.56);
+            transform-style:preserve-3d;
+            cursor:pointer;
+            transition:transform .9s cubic-bezier(.4,0,.2,1);
+            -webkit-tap-highlight-color:transparent;
+        }
+        .book.open{ transform:translateY(-10px) rotateX(4deg); }
+
+        .back-cover{
+            position:absolute; inset:0;
+            border-radius:3px 8px 8px 3px;
+            background:linear-gradient(135deg, var(--leather-1) 0%, var(--leather-2) 45%, var(--leather-3) 100%);
+            box-shadow:inset 0 0 0 1px rgba(0,0,0,.35), 0 26px 40px -14px rgba(0,0,0,.75);
+            z-index:1;
+        }
+        .paper-block{
+            position:absolute; top:6px; bottom:6px; right:5px; width:14px;
+            background:repeating-linear-gradient(to bottom, #f4ead0 0 2px, #e6d8ae 2px 3px);
+            border-radius:0 2px 2px 0;
+            box-shadow:inset -1px 0 2px rgba(0,0,0,.25);
+            z-index:2; opacity:0;
+            transition:opacity .5s ease .3s;
+        }
+        .book.open .paper-block{ opacity:1; }
+
+        .leaf{
+            position:absolute; top:3%; bottom:3%; left:3%; right:3%;
+            transform-origin:left center;
+            background:linear-gradient(115deg, var(--paper-2), var(--paper-1) 40%);
+            border-radius:2px 6px 6px 2px;
+            box-shadow:0 6px 18px rgba(0,0,0,.35);
+            transform:rotateY(0deg);
+            transition:transform 1.1s cubic-bezier(.3,1.4,.4,1);
+            z-index:3;
+        }
+        .leaf2{ z-index:2; }
+        .book.open .leaf1{ transform:rotateY(-138deg); transition-delay:.06s; }
+        .book.open .leaf2{ transform:rotateY(-122deg); transition-delay:.14s; }
+
+        .page-stack{
+            position:absolute; top:3%; bottom:3%; left:3%; right:3%;
+            z-index:4;
+            opacity:0;
+            transition:opacity .5s ease .35s;
+        }
+        .book.open .page-stack{ opacity:1; }
+
+        .leaf-page{
+            position:absolute; inset:0;
+            transform-style:preserve-3d;
+            transform-origin:left center;
+            transform:rotateY(0deg);
+            transition:transform 1s cubic-bezier(.4,0,.2,1);
+            border-radius:2px 6px 6px 2px;
+        }
+        .leaf-page.flipped{ transform:rotateY(-165deg); }
+        .leaf-page.no-anim{ transition:none !important; }
+
+        .page-face{
+            position:absolute; inset:0;
+            backface-visibility:hidden;
+            border-radius:2px 6px 6px 2px;
+            background:linear-gradient(100deg, var(--paper-1), var(--paper-2) 92%);
+            box-shadow:0 10px 26px rgba(0,0,0,.35);
+            overflow:hidden;
+        }
+        .page-face.back{
+            transform:rotateY(180deg);
+            background:linear-gradient(260deg, var(--paper-1), var(--paper-2) 92%);
+        }
+        .page-face.ruled::before{
+            content:"";
+            position:absolute; inset:0;
+            background-image:
+                    linear-gradient(to right, transparent 15%, var(--ink-red) 15%, var(--ink-red) calc(15% + 1px), transparent calc(15% + 1px)),
+                    repeating-linear-gradient(to bottom, transparent 0 30px, var(--ink-blue) 30px calc(30px + 1px));
+            background-position:0 46px, 0 0;
+        }
+        .page-face.front{
+            display:flex;
+            flex-direction:column;
+        }
+        .page-face.front::after{
+            content:"";
+            position:absolute; top:0; bottom:0; left:0; width:10%;
+            background:linear-gradient(to right, rgba(0,0,0,.28), transparent);
+        }
+
+        .page-heading{
+            position:relative; z-index:1;
+            flex-shrink:0;
+            padding:14% 12% 4px 20%;
+            font-family:'Caveat', cursive;
+            color:#3a2c1c;
+        }
+        .page-heading h2{
+            margin:0 0 4px;
+            font-size:clamp(19px, 4.6vw, 24px);
+            font-weight:500;
+            letter-spacing:.5px;
+        }
+        .page-heading p{
+            margin:0;
+            font-size:clamp(13px, 3vw, 16px);
+            line-height:1.5;
+            color:#4a3a24;
+            opacity:.85;
+        }
+        .page-number{
+            position:absolute; bottom:5%; right:8%;
+            font-family:'Cormorant Garamond', serif;
+            font-style:italic; font-size:13px; color:#7a6647; z-index:1;
+        }
+
+        .page-body{
+            position:relative; z-index:1;
+            flex:1;
+            min-height:0;
+            overflow-y:auto;
+            padding:0 12% 30px 20%;
+        }
+        .add-entry-btn{
+            margin-top:2px;
+            background:transparent;
+            border:1px dashed rgba(58,44,28,.4);
+            color:#3a2c1c;
+            font-family:'Cormorant Garamond', serif;
+            font-style:italic;
+            font-size:13px;
+            padding:4px 12px;
+            border-radius:14px;
+            cursor:pointer;
+            transition:background .2s;
+        }
+        .add-entry-btn:hover{ background:rgba(58,44,28,.08); }
+
+        .entry-panel{
+            display:flex;
+            flex-direction:column;
+        }
+        .journal-input{
+            width:100%;
+            border:none;
+            background:transparent;
+            resize:none;
+            font-family:'Caveat', cursive;
+            font-size:17px;
+            line-height:30px;
+            color:var(--ink-pen);
+            outline:none;
+            padding:0;
+        }
+        .journal-input::placeholder{ color:rgba(51,80,122,.45); }
+
+        .todo-list{ display:flex; flex-direction:column; }
+        .todo-row{ display:flex; align-items:center; gap:8px; height:30px; }
+        .todo-row input[type="checkbox"]{
+            appearance:none;
+            -webkit-appearance:none;
+            width:14px; height:14px;
+            border:1.5px solid var(--ink-pen);
+            border-radius:3px;
+            background:transparent;
+            cursor:pointer;
+            position:relative;
+            flex-shrink:0;
+        }
+        .todo-row input[type="checkbox"]:checked{ background:var(--ink-pen); }
+        .todo-row input[type="checkbox"]:checked::after{
+            content:"";
+            position:absolute; left:3px; top:-1px;
+            width:4px; height:8px;
+            border:solid #fff;
+            border-width:0 2px 2px 0;
+            transform:rotate(45deg);
+        }
+        .todo-text{
+            flex:1; min-width:0;
+            border:none;
+            background:transparent;
+            font-family:'Caveat', cursive;
+            font-size:16px;
+            color:var(--ink-pen);
+            outline:none;
+            padding:0;
+        }
+        .todo-text::placeholder{ color:rgba(51,80,122,.4); }
+        .todo-row.done .todo-text{ text-decoration:line-through; opacity:.55; }
+        .todo-del{
+            flex-shrink:0;
+            border:none;
+            background:transparent;
+            color:rgba(58,44,28,.4);
+            font-size:16px;
+            line-height:1;
+            padding:0 2px;
+            cursor:pointer;
+        }
+        .todo-del:hover{ color:rgba(178,68,68,.75); }
+        .add-todo-btn{
+            align-self:flex-start;
+            margin-top:2px;
+            background:transparent;
+            border:none;
+            color:rgba(51,80,122,.75);
+            font-family:'Cormorant Garamond', serif;
+            font-style:italic;
+            font-size:13px;
+            padding:2px 0;
+            cursor:pointer;
+        }
+        .add-todo-btn:hover{ text-decoration:underline; }
+
+        .cover-front{
+            position:absolute; inset:0;
+            transform-style:preserve-3d;
+            transform-origin:left center;
+            transform:rotateY(0deg);
+            transition:transform 1.3s cubic-bezier(.36,1.15,.32,1);
+            z-index:5;
+            border-radius:3px 8px 8px 3px;
+        }
+        .book.open .cover-front{ transform:rotateY(-156deg); }
+
+        .cover-face{
+            position:absolute; inset:0;
+            backface-visibility:hidden;
+            border-radius:3px 8px 8px 3px;
+            overflow:hidden;
+        }
+
+        .cover-outside{
+            background:
+                    radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,.08), transparent 55%),
+                    linear-gradient(135deg, var(--leather-1) 0%, var(--leather-2) 48%, var(--leather-3) 100%);
+            box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 0 40px rgba(0,0,0,.35);
+            display:flex;
+            flex-direction:column;
+        }
+        .cover-outside::before{
+            content:"";
+            position:absolute; inset:12px;
+            border:1.5px solid var(--gold-2);
+            border-radius:2px;
+            box-shadow:inset 0 0 0 1px rgba(233,200,118,.25), 0 0 0 1px rgba(0,0,0,.2);
+            pointer-events:none;
+        }
+
+        .title-block{
+            position:relative;
+            text-align:center;
+            padding:7% 14% 0;
+            color:var(--gold-1);
+            flex-shrink:0;
+        }
+        .title-rule{
+            width:54%; height:1px; margin:0 auto 8px;
+            background:linear-gradient(to right, transparent, var(--gold-2), transparent);
+        }
+        .title-block h1{
+            font-family:'Playfair Display', serif;
+            font-weight:700;
+            font-size:clamp(17px, 4.6vw, 22px);
+            line-height:1.15;
+            margin:0 0 4px;
+            letter-spacing:1px;
+            text-shadow:0 1px 0 rgba(255,235,180,.35), 0 -1px 1px rgba(0,0,0,.55);
+        }
+        .title-block .byline{
+            font-family:'Cormorant Garamond', serif;
+            font-style:italic;
+            font-size:clamp(10px, 2.5vw, 12px);
+            letter-spacing:2px;
+            color:#d9b968;
+            opacity:.85;
+            text-transform:uppercase;
+        }
+
+        .calendar-plate{
+            position:relative;
+            margin:10px 16px 16px;
+            padding:8px 8px 10px;
+            flex:1;
+            min-height:0;
+            display:flex;
+            flex-direction:column;
+            gap:4px;
+            background:rgba(0,0,0,.24);
+            border:1px solid var(--gold-2);
+            border-radius:4px;
+            box-shadow:inset 0 0 14px rgba(0,0,0,.4);
+            overflow:hidden;
+        }
+        .cal-header{
+            flex-shrink:0;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:4px;
+        }
+        .cal-month{
+            flex:1;
+            text-align:center;
+            font-family:'Playfair Display', serif;
+            font-size:clamp(10px, 2.6vw, 13px);
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            color:var(--gold-1);
+        }
+        .cal-nav{
+            flex-shrink:0;
+            border:none;
+            background:transparent;
+            color:var(--gold-1);
+            font-size:15px;
+            line-height:1;
+            padding:2px 7px;
+            border-radius:3px;
+            cursor:pointer;
+            transition:background .2s;
+        }
+        .cal-nav:hover{ background:rgba(233,200,118,.22); }
+        .cal-nav:focus-visible{ outline:1px solid var(--gold-1); outline-offset:1px; }
+        .cal-weekdays{
+            flex-shrink:0;
+            display:grid;
+            grid-template-columns:repeat(7, 1fr);
+            font-size:clamp(8px, 2vw, 10px);
+            color:#caa14a;
+            opacity:.75;
+            text-align:center;
+            letter-spacing:.5px;
+        }
+        .cal-grid{
+            flex:1;
+            min-height:0;
+            display:grid;
+            grid-template-columns:repeat(7, 1fr);
+            gap:2px;
+        }
+        .cal-day{
+            min-height:0;
+            min-width:0;
+            border:none;
+            background:transparent;
+            color:#e9c876;
+            font-family:'Cormorant Garamond', serif;
+            font-size:clamp(9px, 2.4vw, 12px);
+            border-radius:50%;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition:background .2s, color .2s;
+        }
+        .cal-day:hover{ background:rgba(233,200,118,.25); }
+        .cal-day.empty{ visibility:hidden; pointer-events:none; cursor:default; }
+        .cal-day.today{ background:var(--gold-1); color:#3c1019; font-weight:700; }
+        .cal-day.selected{ box-shadow:0 0 0 1.5px var(--gold-1) inset; }
+
+        .clasp{
+            position:absolute; right:-4px; top:50%;
+            transform:translateY(-50%);
+            width:26px; height:44px; z-index:8;
+            transition:opacity .45s ease, transform .5s ease;
+            filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));
+        }
+        .book.open .clasp{ opacity:0; transform:translateY(-50%) translateX(10px) rotate(-25deg); }
+        .clasp svg{ width:100%; height:100%; display:block; }
+
+        .spine{
+            position:absolute; left:0; top:0; bottom:0; width:26px;
+            background:linear-gradient(to right, var(--leather-3), var(--leather-2));
+            border-radius:3px 0 0 3px;
+            box-shadow:inset -3px 0 6px rgba(0,0,0,.5);
+            z-index:6;
+        }
+        .spine::before{
+            content:"";
+            position:absolute; left:4px; right:4px; top:10%; bottom:10%;
+            background-image:repeating-linear-gradient(to bottom, transparent 0 15%, rgba(233,200,118,.35) 15% 16.5%);
+        }
+
+        .ribbon{
+            position:absolute; top:-2px; right:26%;
+            width:9px; height:46px;
+            background:linear-gradient(to bottom, #a9273c, #7a1a2a);
+            z-index:7;
+            clip-path:polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%);
+            box-shadow:0 3px 6px rgba(0,0,0,.4);
+            transform-origin:top center;
+            transition:transform .8s ease;
+        }
+        .book.open .ribbon{ transform:rotate(6deg) translateX(2px); }
+
+        .hint{
+            font-family:'Cormorant Garamond', serif;
+            font-style:italic;
+            font-size:15px;
+            letter-spacing:1px;
+            color:#c9b28a;
+            opacity:.8;
+            user-select:none;
+            text-align:center;
+            transition:opacity .4s ease;
+        }
+
+        .nav-buttons{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .4s ease .3s;
+        }
+        .stage.is-open .nav-buttons{ opacity:1; pointer-events:auto; }
+        .nav-btn{
+            font-family:'Cormorant Garamond', serif;
+            font-size:15px;
+            letter-spacing:.5px;
+            padding:8px 18px;
+            border-radius:20px;
+            border:1px solid var(--gold-2);
+            background:rgba(233,200,118,.08);
+            color:var(--gold-1);
+            cursor:pointer;
+            transition:background .2s, opacity .2s;
+        }
+        .nav-btn:hover:not(:disabled){ background:rgba(233,200,118,.2); }
+        .nav-btn:disabled{ opacity:.3; cursor:default; }
+        .nav-btn.primary{
+            background:linear-gradient(135deg, var(--gold-1), var(--gold-2));
+            color:#3c1019;
+            font-weight:600;
+            border:none;
+        }
+        .current-day-label{
+            color:#c9b28a;
+            font-style:italic;
+            font-size:14px;
+            min-width:120px;
+            text-align:center;
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            .book, .cover-front, .leaf, .leaf-page, .book-shadow, .page-stack, .clasp, .ribbon{
+                transition-duration:.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+    <div class="book" id="book" role="button" tabindex="0" aria-pressed="false" aria-label="Closed leather daybook, press to open">
+
+        <div class="back-cover">
+            <div class="paper-block"></div>
+        </div>
+
+        <div class="leaf leaf2"></div>
+        <div class="leaf leaf1"></div>
+
+        <div class="page-stack" id="pageStack"></div>
+
+        <div class="ribbon"></div>
+
+        <div class="cover-front">
+            <div class="cover-face cover-outside">
+                <div class="title-block">
+                    <div class="title-rule"></div>
+                    <h1>The&nbsp;Daybook</h1>
+                    <div class="byline">a journal, dated</div>
+                </div>
+                <div class="calendar-plate">
+                    <div class="cal-header">
+                        <button class="cal-nav" id="calPrevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
+                        <span class="cal-month" id="calMonth">Month Year</span>
+                        <button class="cal-nav" id="calNextMonth" type="button" aria-label="Next month">&rsaquo;</button>
+                    </div>
+                    <div class="cal-weekdays">
+                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    </div>
+                    <div class="cal-grid" id="calGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="spine"></div>
+
+        <div class="clasp">
+            <svg viewBox="0 0 26 44">
+                <rect x="4" y="0" width="18" height="44" rx="3" fill="#caa14a"/>
+                <rect x="4" y="0" width="18" height="44" rx="3" fill="url(#g)" opacity="0.6"/>
+                <circle cx="13" cy="20" r="6" fill="#8a6a25"/>
+                <circle cx="13" cy="20" r="3" fill="#e9c876"/>
+                <defs>
+                    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
+                        <stop offset="1" stop-color="#000" stop-opacity=".3"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+    </div>
+
+    <div class="book-shadow"></div>
+
+    <div class="hint" id="hint">click a date to open the daybook there — or click the cover</div>
+
+    <div class="nav-buttons" id="navButtons">
+        <button id="prevBtn" class="nav-btn" type="button" aria-label="Previous day">&lsaquo; Prev</button>
+        <span id="currentDayLabel" class="current-day-label"></span>
+        <button id="nextBtn" class="nav-btn primary" type="button" aria-label="Next day">Next day &rsaquo;</button>
+    </div>
+</div>
+
+<script>
+    const stage = document.getElementById('stage');
+    const book = document.getElementById('book');
+    const hint = document.getElementById('hint');
+    const calMonth = document.getElementById('calMonth');
+    const calGrid = document.getElementById('calGrid');
+    const pageStack = document.getElementById('pageStack');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentDayLabel = document.getElementById('currentDayLabel');
+
+    let isOpen = false;
+    let pages = [];
+    let currentIndex = 0;
+    let calYear, calMonthIndex;
+    const realToday = new Date();
+    let displayYear = realToday.getFullYear();
+    let displayMonthIndex = realToday.getMonth();
+
+    const STORAGE_KEY = 'daybook-entries-v1';
+    let journalStore = {};
+    try {
+        journalStore = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (err) {
+        journalStore = {};
+    }
+
+    function saveStore(){
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(journalStore));
+        } catch (err) { /* storage unavailable, entries stay in-memory only */ }
+    }
+
+    function getEntry(dateKey){
+        if (!journalStore[dateKey]) journalStore[dateKey] = { journal: '', todos: [] };
+        return journalStore[dateKey];
+    }
+
+    function renderPageBody(leaf, dateKey){
+        const front = leaf.querySelector('.page-face.front');
+        let body = front.querySelector('.page-body');
+        if (!body){
+            body = document.createElement('div');
+            body.className = 'page-body';
+            front.appendChild(body);
+        }
+        body.innerHTML = '';
+
+        const entry = getEntry(dateKey);
+        const panel = document.createElement('div');
+        panel.className = 'entry-panel';
+
+        if (entry.journal.trim().length === 0 && !entry.journalOpen){
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'add-entry-btn';
+            addBtn.textContent = '+ Add entry';
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                entry.journalOpen = true;
+                renderPageBody(leaf, dateKey);
+                const ta = body.querySelector('.journal-input');
+                if (ta) ta.focus();
+            });
+            panel.appendChild(addBtn);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.className = 'journal-input';
+            ta.placeholder = 'Write about your day…';
+            ta.rows = 3;
+            ta.value = entry.journal;
+            ta.addEventListener('click', (e) => e.stopPropagation());
+            ta.addEventListener('input', () => { entry.journal = ta.value; saveStore(); });
+            panel.appendChild(ta);
+        }
+
+        if (entry.todos.length > 0){
+            const todoList = document.createElement('div');
+            todoList.className = 'todo-list';
+            entry.todos.forEach((todo, idx) => {
+                const row = document.createElement('div');
+                row.className = 'todo-row' + (todo.done ? ' done' : '');
+
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = todo.done;
+                cb.addEventListener('click', (e) => e.stopPropagation());
+                cb.addEventListener('change', () => {
+                    todo.done = cb.checked;
+                    row.classList.toggle('done', cb.checked);
+                    saveStore();
+                });
+
+                const txt = document.createElement('input');
+                txt.type = 'text';
+                txt.className = 'todo-text';
+                txt.placeholder = 'To-do…';
+                txt.value = todo.text;
+                txt.addEventListener('click', (e) => e.stopPropagation());
+                txt.addEventListener('input', () => { todo.text = txt.value; saveStore(); });
+
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'todo-del';
+                del.textContent = '\u00d7';
+                del.setAttribute('aria-label', 'Remove to-do');
+                del.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    entry.todos.splice(idx, 1);
+                    saveStore();
+                    renderPageBody(leaf, dateKey);
+                });
+
+                row.append(cb, txt, del);
+                todoList.appendChild(row);
+            });
+            panel.appendChild(todoList);
+        }
+
+        const addTodoBtn = document.createElement('button');
+        addTodoBtn.type = 'button';
+        addTodoBtn.className = 'add-todo-btn';
+        addTodoBtn.textContent = '+ add to-do';
+        addTodoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            entry.todos.push({ text: '', done: false });
+            saveStore();
+            renderPageBody(leaf, dateKey);
+            const rows = body.querySelectorAll('.todo-text');
+            if (rows.length) rows[rows.length - 1].focus();
+        });
+        panel.appendChild(addTodoBtn);
+
+        body.appendChild(panel);
+    }
+
+    function setOpen(next){
+        isOpen = next;
+        book.classList.toggle('open', isOpen);
+        stage.classList.toggle('is-open', isOpen);
+        book.setAttribute('aria-pressed', String(isOpen));
+        book.setAttribute('aria-label', isOpen ? 'Open daybook, press to close' : 'Closed leather daybook, press to open');
+        hint.textContent = isOpen ? 'click the cover to close it' : 'click a date to open the daybook there — or click the cover';
+    }
+
+    function updatePages(instant){
+        const dayEls = [...calGrid.children].filter(c => !c.classList.contains('empty'));
+
+        pages.forEach((leaf, i) => {
+            leaf.classList.toggle('no-anim', !!instant);
+            if (i < currentIndex) {
+                leaf.classList.add('flipped');
+                leaf.style.zIndex = i + 1;
+            } else {
+                leaf.classList.remove('flipped');
+                leaf.style.zIndex = pages.length - i;
+            }
+        });
+
+        if (instant) {
+            requestAnimationFrame(() => pages.forEach(l => l.classList.remove('no-anim')));
+        }
+
+        dayEls.forEach(el => el.classList.remove('selected'));
+        if (dayEls[currentIndex]) dayEls[currentIndex].classList.add('selected');
+
+        const shownDate = new Date(calYear, calMonthIndex, currentIndex + 1);
+        currentDayLabel.textContent = shownDate.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= pages.length - 1;
+    }
+
+    function jumpToDay(index){
+        currentIndex = index;
+        if (!isOpen) setOpen(true);
+        updatePages(true);
+    }
+
+    function nextDay(){
+        if (currentIndex < pages.length - 1){
+            currentIndex++;
+            updatePages(false);
+        }
+    }
+
+    function prevDay(){
+        if (currentIndex > 0){
+            currentIndex--;
+            updatePages(false);
+        }
+    }
+
+    function buildCalendarAndPages(){
+        calYear = displayYear;
+        calMonthIndex = displayMonthIndex;
+        const daysInMonth = new Date(calYear, calMonthIndex + 1, 0).getDate();
+        const firstWeekday = new Date(calYear, calMonthIndex, 1).getDay();
+        const isCurrentRealMonth = calYear === realToday.getFullYear() && calMonthIndex === realToday.getMonth();
+
+        calMonth.textContent = new Date(calYear, calMonthIndex, 1).toLocaleDateString('default', { month: 'long', year: 'numeric' });
+
+        calGrid.innerHTML = '';
+        for (let i = 0; i < firstWeekday; i++){
+            const empty = document.createElement('div');
+            empty.className = 'cal-day empty';
+            calGrid.appendChild(empty);
+        }
+        for (let d = 1; d <= daysInMonth; d++){
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'cal-day';
+            btn.textContent = d;
+            if (isCurrentRealMonth && d === realToday.getDate()) btn.classList.add('today');
+            btn.setAttribute('aria-label', 'Open ' + calMonth.textContent + ' ' + d);
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                jumpToDay(d - 1);
+            });
+            calGrid.appendChild(btn);
+        }
+        const weekRows = Math.ceil((firstWeekday + daysInMonth) / 7);
+        calGrid.style.gridTemplateRows = 'repeat(' + weekRows + ', 1fr)';
+
+        pageStack.innerHTML = '';
+        pages = [];
+        for (let d = 1; d <= daysInMonth; d++){
+            const dateObj = new Date(calYear, calMonthIndex, d);
+            const weekday = dateObj.toLocaleDateString('default', { weekday: 'long' });
+            const monthLong = dateObj.toLocaleDateString('default', { month: 'long' });
+            const dateKey = calYear + '-' + calMonthIndex + '-' + d;
+
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf-page';
+            leaf.dataset.dateKey = dateKey;
+            leaf.innerHTML =
+                '<div class="page-face front ruled">' +
+                '<div class="page-heading"><h2>' + weekday + '</h2><p>' + monthLong + ' ' + d + ', ' + calYear + '</p></div>' +
+                '<div class="page-number">' + d + '</div>' +
+                '</div>' +
+                '<div class="page-face back ruled"></div>';
+            renderPageBody(leaf, dateKey);
+            pageStack.appendChild(leaf);
+            pages.push(leaf);
+        }
+
+        currentIndex = isCurrentRealMonth ? realToday.getDate() - 1 : 0;
+        updatePages(true);
+    }
+
+    function goToMonth(delta){
+        displayMonthIndex += delta;
+        if (displayMonthIndex < 0){ displayMonthIndex = 11; displayYear--; }
+        if (displayMonthIndex > 11){ displayMonthIndex = 0; displayYear++; }
+        buildCalendarAndPages();
+    }
+
+    book.addEventListener('click', () => setOpen(!isOpen));
+    book.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            setOpen(!isOpen);
+        }
+    });
+
+    document.getElementById('calPrevMonth').addEventListener('click', (e) => {
+        e.stopPropagation();
+        goToMonth(-1);
+    });
+    document.getElementById('calNextMonth').addEventListener('click', (e) => {
+        e.stopPropagation();
+        goToMonth(1);
+    });
+
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevDay(); });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextDay(); });
+
+    buildCalendarAndPages();
+</script>
+
+</body>
+</html>
