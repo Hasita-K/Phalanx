@@ -1,0 +1,202 @@
+/* Color variables for Light Mode (Default) */
+
+:root {
+    --bg-color: #f4f7f6;
+    --card-bg: white;
+    --text-main: #333;
+    --text-sub: #777;
+    --input-border: #ddd;
+    --right-side-bg: #e3faf4;
+    --book-bg: #2c3e50;
+    --book-spine: #1a252f;
+}
+
+
+/* Color variables for Dark Mode */
+
+body.dark-theme {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #f4f7f6;
+    --text-sub: #aaa;
+    --input-border: #444;
+    --right-side-bg: #1a2d29;
+    --book-bg: #34495e;
+    --book-spine: #2c3e50;
+}
+
+
+/* Reset basic margins */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* Smooth color transitions */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+
+/* Theme Button position */
+
+.theme-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+
+/* The split container */
+
+.login-container {
+    display: flex;
+    width: 900px;
+    height: 550px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+
+/* Left side styling */
+
+.left-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.form-box {
+    width: 100%;
+    max-width: 320px;
+}
+
+.form-box h2 {
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-box p {
+    color: var(--text-sub);
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border-radius: 6px;
+    outline: none;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.toggle-text {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-sub);
+}
+
+.toggle-text a {
+    color: #4A90E2;
+    text-decoration: none;
+}
+
+
+/* Right side styling */
+
+.right-side {
+    flex: 1;
+    background-color: var(--right-side-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.journal-graphic {
+    width: 160px;
+    height: 220px;
+    background-color: var(--book-bg);
+    border-radius: 4px 12px 12px 4px;
+    position: relative;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: floatAndRevolve 4s ease-in-out infinite;
+}
+
+.journal-spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 14px;
+    height: 100%;
+    background-color: var(--book-spine);
+    border-radius: 4px 0 0 4px;
+}
+
+.journal-title {
+    color: #f1c40f;
+    font-weight: bold;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+@keyframes floatAndRevolve {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-15px) rotate(3deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
