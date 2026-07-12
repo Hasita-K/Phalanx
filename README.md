@@ -22,10 +22,10 @@ HeartBeats is a web-based journal made to feel like a typical everyday notebook,
 - Fetch API
 
 ## Structure
-book.html is the main journal interface
-firebase.js is the firebase configuration
-login.html is the login page, routing to book.html
-app.py runs the spotify API pull with the provided parameters(song name, artist name)
+- book.html is the main journal interface
+- firebase.js is the firebase configuration, also storing individual user's journal entries
+- login.html is the login page, routing to book.html
+- app.py runs the spotify API pull with the provided parameters(song name, artist name)
 
 
 ## Problems and future improvements
